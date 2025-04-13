@@ -1,0 +1,13 @@
+.custom-hr{
+    height: 1px;
+    background-color: white;
+    border: none;
+}
+#cabeceraFondo{
+    background-image: url('../img/cabaña.jpg');
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(0, 0, 0, 0.5); /* Color de fondo negro con transparencia */
+    background-blend-mode: overlay;
+    min-height: 200px;
+}
