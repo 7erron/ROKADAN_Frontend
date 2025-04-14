@@ -11,40 +11,12 @@ function DetalleCabana() {
     useEffect(() => {
         const fetchCabana = async () => {
             try {
-                const response = await axios.get(`http://localhost:3000/api/cabanas/${id}`);
-                
-                if (!response.data) {
-                    throw new Error('No se recibieron datos de la cabaña');
-                }
-
-                // Normalizar estructura de respuesta
-                const cabanaData = response.data;
-                
-                // Validar campos esenciales
-                if (!cabanaData) {
-                    throw new Error('Estructura de datos no válida');
-                }
-
-                // Asegurar que la imagen tenga un valor
-                if (!cabanaData.imagen) {
-                    console.warn('Cabaña sin imagen, usando placeholder');
-                    cabanaData.imagen = 'https://via.placeholder.com/800x600?text=Imagen+no+disponible';
-                }
-
-                setCabana(cabanaData);
-                setError(null);
+                const response = await axios.get(`/api/cabanas/${id}`);
+                setCabana(response.data.data.cabana);
+                setLoading(false);
             } catch (err) {
-                console.error("Error al cargar cabaña:", {
-                    message: err.message,
-                    response: err.response,
-                    stack: err.stack
-                });
-                
-                setError(
-                    err.response?.data?.error || 
-                    'Error al cargar los detalles de la cabaña'
-                );
-            } finally {
+                console.error("Error fetching cabin details:", err);
+                setError("Error al cargar los detalles de la cabaña");
                 setLoading(false);
             }
         };
@@ -58,22 +30,15 @@ function DetalleCabana() {
                 <div className="spinner-border text-success" role="status">
                     <span className="visually-hidden">Cargando...</span>
                 </div>
-                <p className="mt-2">Cargando detalles de la cabaña...</p>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="container my-5">
-                <div className="alert alert-danger text-center">
-                    {error}
-                    <div className="mt-3">
-                        <Link to="/cabanas" className="btn btn-primary">
-                            Volver a Cabañas
-                        </Link>
-                    </div>
-                </div>
+            <div className="container my-5 text-center">
+                <div className="alert alert-danger">{error}</div>
+                <Link to="/cabanas" className="btn btn-primary mt-3">Volver a Cabañas</Link>
             </div>
         );
     }
@@ -82,10 +47,7 @@ function DetalleCabana() {
         return (
             <div className="container my-5 text-center">
                 <h2>Cabaña no encontrada</h2>
-                <p>La cabaña solicitada no existe o no está disponible</p>
-                <Link to="/cabanas" className="btn btn-primary mt-3">
-                    Volver a Cabañas
-                </Link>
+                <Link to="/cabanas" className="btn btn-primary mt-3">Volver a Cabañas</Link>
             </div>
         );
     }
@@ -93,49 +55,28 @@ function DetalleCabana() {
     return (
         <div className="container my-5">
             <div className="row">
-                <div className="col-md-6 mb-4 mb-md-0">
+                <div className="col-md-6">
                     <img 
-                        src={cabana.imagen}
-                        alt={`Cabaña ${cabana.nombre}`}
+                        src={cabana.imagen} 
+                        alt={cabana.nombre} 
                         className="img-fluid rounded shadow"
-                        style={{
-                            height: "400px",
-                            width: "100%",
-                            objectFit: "cover"
-                        }}
-                        onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/800x600?text=Imagen+no+disponible';
-                        }}
+                        style={{height: "400px", width: "100%", objectFit: "cover"}}
                     />
                 </div>
                 <div className="col-md-6">
                     <h1 className="text-success mb-3">{cabana.nombre}</h1>
                     <p className="lead">{cabana.descripcion}</p>
-                    
                     <ul className="list-group mb-4">
-                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Precio por noche:</strong>
-                            <span>${cabana.precio.toLocaleString('es-CL')}</span>
+                        <li className="list-group-item">
+                            <strong>Precio:</strong> ${cabana.precio.toLocaleString()} por noche
                         </li>
-                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Capacidad:</strong>
-                            <span>{cabana.capacidad} personas</span>
+                        <li className="list-group-item">
+                            <strong>Capacidad:</strong> {cabana.capacidad} personas
                         </li>
                     </ul>
-                    
                     <div className="d-flex gap-3">
-                        <Link 
-                            to={`/reservas/${cabana.id}`} 
-                            className="btn btn-success btn-lg flex-grow-1"
-                        >
-                            Reservar ahora
-                        </Link>
-                        <Link 
-                            to="/cabanas" 
-                            className="btn btn-outline-secondary btn-lg"
-                        >
-                            Ver más cabañas
-                        </Link>
+                        <Link to={`/reservas/${cabana.id}`} className="btn btn-success">Reservar</Link>
+                        <Link to="/cabanas" className="btn btn-outline-secondary">Volver a Cabañas</Link>
                     </div>
                 </div>
             </div>

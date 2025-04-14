@@ -10,44 +10,20 @@ function Home() {
     const [availableRooms, setAvailableRooms] = useState([]);
     const [searchPerformed, setSearchPerformed] = useState(false);
     const [searchError, setSearchError] = useState(null);
-    const [destacadosError, setDestacadosError] = useState(null);
 
     useEffect(() => {
-        const abortController = new AbortController();
-
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/cabanas/destacadas', {
-                    signal: abortController.signal,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (!response.data || !Array.isArray(response.data)) {
-                    throw new Error('La API no devolvió un array válido');
-                }
-
+                const response = await axios.get('/api/cabanas/destacadas');
                 setDestacados(response.data);
-                setDestacadosError(null);
+                setLoading(false);
             } catch (error) {
-                if (error.name !== 'CanceledError') {
-                    setDestacadosError(
-                        error.response?.data?.error || 
-                        'Error al cargar cabañas destacadas. Intente recargar la página.'
-                    );
-                    setDestacados([]);
-                }
-            } finally {
+                console.error("Error fetching featured cabins:", error);
                 setLoading(false);
             }
         };
 
         fetchData();
-
-        return () => {
-            abortController.abort();
-        };
     }, []);
 
     const handleSearchRooms = async (searchData) => {
@@ -57,33 +33,19 @@ function Home() {
         setSearchError(null);
 
         try {
-            const params = {
-                fechaInicio: checkin,
-                fechaFin: checkout,
-                adultos: adults || 1,
-                ninos: children || 0
-            };
-
-            const response = await axios.get('http://localhost:3000/api/cabanas/disponibles', {
-                params,
-                validateStatus: (status) => status < 500
+            const response = await axios.get('/api/cabanas/disponibles', {
+                params: {
+                    fechaInicio: checkin,
+                    fechaFin: checkout,
+                    adultos: adults,
+                    ninos: children
+                }
             });
             
-            if (response.status === 400) {
-                throw new Error(response.data.error || 'Datos de búsqueda inválidos');
-            }
-
-            if (!Array.isArray(response.data)) {
-                throw new Error('La respuesta del servidor no es válida');
-            }
-
             setAvailableRooms(response.data);
         } catch (error) {
-            setSearchError(
-                error.message || 
-                error.response?.data?.error || 
-                'Error al buscar cabañas disponibles'
-            );
+            console.error("Error searching rooms:", error);
+            setSearchError("Error al buscar cabañas disponibles. Por favor, intente nuevamente.");
             setAvailableRooms([]);
         } finally {
             setLoading(false);
@@ -137,7 +99,6 @@ function Home() {
                                 onClick={() => {
                                     setSearchPerformed(false);
                                     setAvailableRooms([]);
-                                    setSearchError(null);
                                 }}
                             >
                                 Volver al inicio
@@ -172,7 +133,6 @@ function Home() {
                                     src="https://www.complejoturisticopucon.com/wp-content/uploads/SeoGoogle_.jpg"
                                     alt="Cabañas Rokadan"
                                     className="img-fluid rounded"
-                                    style={{ maxHeight: '400px', objectFit: 'cover' }}
                                 />
                             </div>
                         </div>
@@ -182,11 +142,6 @@ function Home() {
                         <div className="row">
                             <div className="col-md-12 text-center mb-4">
                                 <h2>Cabañas Destacadas</h2>
-                                {destacadosError && (
-                                    <div className="alert alert-warning">
-                                        {destacadosError}
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -196,17 +151,13 @@ function Home() {
                                     <span className="visually-hidden">Cargando...</span>
                                 </div>
                             </div>
-                        ) : destacados.length === 0 ? (
-                            <div className="alert alert-info text-center">
-                                No hay cabañas destacadas disponibles
-                            </div>
                         ) : (
                             <div className="row">
                                 {destacados.map((cabana) => (
                                     <div className="col-md-6 mb-4" key={cabana.id}>
                                         <div className="card h-100">
                                             <img
-                                                src={cabana.imagen || 'https://via.placeholder.com/400x300'}
+                                                src={cabana.imagen}
                                                 className="card-img-top"
                                                 alt={cabana.nombre}
                                                 style={{ height: "350px", objectFit: "cover" }}
