@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import CabanaCard from '../components/CabanaCard';
-import { getCabanas } from '../api';
+import axios from 'axios';
+
+// Configuración de Axios para el backend
+const api = axios.create({
+  baseURL: 'https://rokadan-backend.onrender.com/api',
+  timeout: 10000, // 10 segundos de timeout
+});
 
 function Cabañas() {
     const [cabanas, setCabanas] = useState([]);
