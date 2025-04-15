@@ -1,6 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { loginUser } from '../api';
+
 
 function Login() {
     const { login } = useContext(AuthContext);
@@ -17,6 +19,8 @@ function Login() {
         pass: false,
         passLength: false
     });
+    
+    const [submitError, setSubmitError] = useState(null);
     
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -38,24 +42,28 @@ function Login() {
         return !Object.values(newErrors).some(error => error);
     };
     
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitError(null);
         
-        if (validateForm()) {
-            // Simulación de login exitoso
-            login({ 
-                email: formData.correo, 
-                nombre: "Usuario", 
-                apellido: "Apellido",
-                id: Date.now() 
+        if (!validateForm()) return;
+
+        try {
+            const userData = await loginUser({
+                email: formData.correo,
+                password: formData.pass
             });
             
-            // Si es admin, redirigir al panel de admin
-            if (formData.correo === 'admin@cabanas.com') {
+            login(userData);
+            
+            if (userData.es_admin) {
                 navigate('/admin');
             } else {
                 navigate('/');
             }
+        } catch (err) {
+            console.error('Error en login:', err);
+            setSubmitError(err.message || 'Credenciales incorrectas');
         }
     };
 

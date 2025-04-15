@@ -1,9 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { createReserva } from '../api';
 
 function Reservas() {
-    const { id } = useParams(); // Obtener el ID de la cabaña desde la URL
+    const { id } = useParams();
     const { user, isAuthenticated } = useContext(AuthContext);
     const [reservationData, setReservationData] = useState({
         cabana: id || '',
@@ -14,6 +15,8 @@ function Reservas() {
         extras: [],
         userId: user?.id || null
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const serviciosExtras = [
         { id: 1, nombre: "Desayuno Incluido", precio: 5000 },
@@ -45,42 +48,48 @@ function Reservas() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError(null);
 
         if (!isAuthenticated) {
-            alert('Debes iniciar sesión para realizar una reserva.');
+            setError('Debes iniciar sesión para realizar una reserva.');
+            setLoading(false);
             return;
         }
 
-        // Validar fechas
         if (new Date(reservationData.checkin) >= new Date(reservationData.checkout)) {
-            alert('La fecha de salida debe ser posterior a la fecha de llegada.');
+            setError('La fecha de salida debe ser posterior a la fecha de llegada.');
+            setLoading(false);
             return;
         }
 
-        // Guardar la reserva en localStorage
-        const storedReservas = JSON.parse(localStorage.getItem('reservas')) || [];
-        const newReservation = { 
-            ...reservationData, 
-            id: Date.now(),
-            userId: user.id,
-            fechaReserva: new Date().toISOString(),
-            estado: 'pendiente'
-        };
-        const updatedReservas = [...storedReservas, newReservation];
-        localStorage.setItem('reservas', JSON.stringify(updatedReservas));
+        try {
+            await createReserva({
+                ...reservationData,
+                userId: user.id
+            });
 
-        alert(`Reserva realizada con éxito para ${user.nombre}. Para más detalles, dirígete a la sección "Mis Reservas".`);
-        setReservationData({
-            cabana: '',
-            checkin: '',
-            checkout: '',
-            adults: 1,
-            children: 0,
-            extras: [],
-            userId: user.id
-        });
+            alert(`Reserva realizada con éxito para ${user.nombre}.`);
+            setReservationData({
+                cabana: '',
+                checkin: '',
+                checkout: '',
+                adults: 1,
+                children: 0,
+                extras: [],
+                userId: user.id
+            });
+        } catch (err) {
+            console.error('Error al crear reserva:', err);
+            setError(
+                err.message ||
+                'Error al realizar la reserva. Por favor intente nuevamente.'
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

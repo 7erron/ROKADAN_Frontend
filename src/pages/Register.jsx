@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { registerUser } from '../api';
 
 function Register() {
     const { login } = useContext(AuthContext);
@@ -28,6 +29,8 @@ function Register() {
         passwordsMatch: false
     });
     
+    const [submitError, setSubmitError] = useState(null);
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -54,23 +57,27 @@ function Register() {
         return !Object.values(newErrors).some(error => error);
     };
     
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitError(null);
         
-        if (validateForm()) {
-            // Simulación de registro exitoso
-            login({ 
-                email: formData.correo, 
+        if (!validateForm()) return;
+
+        try {
+            const userData = await registerUser({
                 nombre: formData.nombre,
                 apellido: formData.apellido,
-                id: Date.now() 
+                email: formData.correo,
+                telefono: formData.telefono,
+                password: formData.pass
             });
             
-            // Redirigir a la página principal
+            login(userData);
             navigate('/');
-            
-            // Mostrar alerta de registro exitoso
             alert("¡Registro exitoso! Bienvenido/a " + formData.nombre);
+        } catch (err) {
+            console.error('Error en registro:', err);
+            setSubmitError(err.message || 'Error al registrar el usuario');
         }
     };
 
