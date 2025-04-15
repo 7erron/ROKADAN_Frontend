@@ -2,14 +2,37 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ServicioCard from '../components/ServicioCard';
 import { AuthContext } from '../context/AuthContext';
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://rokadan-backend.onrender.com/api',
+  timeout: 10000,
+});
 
 function Servicios() {
     const [cart, setCart] = useState([]);
+    const [servicios, setServicios] = useState([]);
+    const [loading, setLoading] = useState(true);
     const { isAuthenticated, user } = useContext(AuthContext);
     const navigate = useNavigate();
 
-    // Cargar carrito desde localStorage si existe
+    // Cargar servicios desde la API
     useEffect(() => {
+        const fetchServicios = async () => {
+            try {
+                const response = await api.get('/servicios');
+                setServicios(response.data?.servicios || response.data || response);
+            } catch (err) {
+                console.error("Error al cargar servicios:", err);
+                setServicios([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchServicios();
+
+        // Cargar carrito desde localStorage si existe
         const storedCart = JSON.parse(localStorage.getItem('serviciosCart')) || [];
         setCart(storedCart);
     }, []);
@@ -18,51 +41,6 @@ function Servicios() {
     useEffect(() => {
         localStorage.setItem('serviciosCart', JSON.stringify(cart));
     }, [cart]);
-
-    const servicios = [
-        {
-            id: 1,
-            titulo: "Desayuno Incluido",
-            descripcion: "Disfruta de un desayuno completo con productos locales y caseros.",
-            icono: "bi-cup-hot",
-            precio: 5000
-        },
-        {
-            id: 2,
-            titulo: "WiFi Gratis",
-            descripcion: "Mantente conectado con conexión WiFi de alta velocidad en todas nuestras cabañas.",
-            icono: "bi-wifi",
-            precio: 0
-        },
-        {
-            id: 3,
-            titulo: "Piscina",
-            descripcion: "Relájate en nuestra piscina con vistas panorámicas al bosque.",
-            icono: "bi-water",
-            precio: 10000
-        },
-        {
-            id: 4,
-            titulo: "Chimenea",
-            descripcion: "Todas nuestras cabañas cuentan con chimenea para las noches frías.",
-            icono: "bi-fire",
-            precio: 8000
-        },
-        {
-            id: 5,
-            titulo: "Excursiones",
-            descripcion: "Organizamos excursiones guiadas por los alrededores.",
-            icono: "bi-map",
-            precio: 15000
-        },
-        {
-            id: 6,
-            titulo: "Parking Gratuito",
-            descripcion: "Aparcamiento privado gratuito en el alojamiento.",
-            icono: "bi-p-square",
-            precio: 0
-        }
-    ];
 
     const addToCart = (servicio) => {
         if (!isAuthenticated) {
@@ -94,7 +72,7 @@ function Servicios() {
         alert("El servicio ha sido eliminado del carrito.");
     };
 
-    const addServicesToReservation = () => {
+    const addServicesToReservation = async () => {
         if (!isAuthenticated) {
             alert("Debes iniciar sesión para agregar servicios a tu reserva.");
             navigate('/login');
@@ -106,38 +84,34 @@ function Servicios() {
             return;
         }
 
-        // Obtener reservas existentes
-        const storedReservas = JSON.parse(localStorage.getItem('reservas')) || [];
-        
-        // Buscar reservas del usuario actual
-        const userReservas = storedReservas.filter(reserva => 
-            reserva.userId === user.id
-        );
-        
-        if (userReservas.length === 0) {
-            alert("No tienes ninguna reserva activa. Primero debes crear una reserva.");
-            navigate('/cabañas');
-            return;
-        }
+        try {
+            // Obtener la última reserva del usuario
+            const response = await api.get(`/reservas/usuario/${user.id}`);
+            const reservas = response.data?.reservas || response.data || response;
+            
+            if (reservas.length === 0) {
+                alert("No tienes ninguna reserva activa. Primero debes crear una reserva.");
+                navigate('/cabañas');
+                return;
+            }
 
-        // Tomar la última reserva del usuario
-        const lastReserva = userReservas[userReservas.length - 1];
-        
-        // Actualizar los extras de la reserva
-        const updatedReservas = storedReservas.map(reserva => 
-            reserva.id === lastReserva.id 
-                ? { ...reserva, extras: cart } 
-                : reserva
-        );
-        
-        // Guardar de vuelta en localStorage
-        localStorage.setItem('reservas', JSON.stringify(updatedReservas));
-        
-        // Limpiar el carrito
-        setCart([]);
-        
-        alert("Servicios agregados exitosamente a tu reserva.");
-        navigate('/misreservas');
+            // Tomar la última reserva
+            const lastReserva = reservas[reservas.length - 1];
+            
+            // Actualizar la reserva con los servicios
+            await api.put(`/reservas/${lastReserva.id}`, {
+                extras: cart
+            });
+            
+            // Limpiar el carrito
+            setCart([]);
+            
+            alert("Servicios agregados exitosamente a tu reserva.");
+            navigate('/misreservas');
+        } catch (err) {
+            console.error("Error al agregar servicios a la reserva:", err);
+            alert(err.response?.data?.message || "Error al agregar servicios a la reserva.");
+        }
     };
 
     const calculateTotal = () => {
@@ -145,6 +119,16 @@ function Servicios() {
             return total + (item.precio * item.dias);
         }, 0);
     };
+
+    if (loading) {
+        return (
+            <div className="text-center py-5">
+                <div className="spinner-border text-success" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <main>
@@ -158,7 +142,7 @@ function Servicios() {
                 </div>
                 <div className="row">
                     {servicios.map(servicio => (
-                        <div className="col-md-4" key={servicio.id}>
+                        <div className="col-md-4 mb-4" key={servicio.id}>
                             <ServicioCard 
                                 {...servicio} 
                                 onAddToCart={() => addToCart(servicio)} 

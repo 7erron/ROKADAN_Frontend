@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { getReservasUsuario, updateReserva } from '../api';
+import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
+
+const api = axios.create({
+  baseURL: 'https://rokadan-backend.onrender.com/api',
+  timeout: 10000,
+});
 
 function MisReservas() {
     const { user } = useContext(AuthContext);
@@ -28,19 +33,18 @@ function MisReservas() {
             }
 
             try {
-                const data = await getReservasUsuario(user.id);
+                const response = await api.get(`/reservas/usuario/${user.id}`);
                 
                 // Manejo de diferentes estructuras de respuesta
-                const reservasData = data.data?.reservas || data.reservas || data;
+                const reservasData = response.data?.reservas || 
+                                   response.data || 
+                                   response;
                 
                 setReservas(reservasData);
                 setError(null);
             } catch (err) {
                 console.error("Error al obtener reservas:", err);
-                setError(
-                    err.message ||
-                    'Error al cargar tus reservas'
-                );
+                setError(err.response?.data?.message || 'Error al cargar tus reservas');
                 setReservas([]);
             } finally {
                 setLoading(false);
@@ -73,10 +77,12 @@ function MisReservas() {
         }
 
         try {
-            const updatedReserva = await updateReserva(
-                reservas[editingIndex].id, 
+            const response = await api.put(
+                `/reservas/${reservas[editingIndex].id}`, 
                 editData
             );
+            
+            const updatedReserva = response.data?.reserva || response.data;
             
             const updatedReservas = [...reservas];
             updatedReservas[editingIndex] = updatedReserva;
@@ -86,10 +92,7 @@ function MisReservas() {
             setUpdateError(null);
         } catch (err) {
             console.error("Error al actualizar reserva:", err);
-            setUpdateError(
-                err.message ||
-                'Error al actualizar la reserva. Por favor intente nuevamente.'
-            );
+            setUpdateError(err.response?.data?.message || 'Error al actualizar la reserva. Por favor intente nuevamente.');
         }
     };
 
@@ -104,7 +107,7 @@ function MisReservas() {
                 <h1>Comprobante de Reserva</h1>
                 <h2>Muchas gracias por reservar junto a Cabañas Rokadan</h2>
                 <h3>A continuación te entregamos el detalle de tu estadía</h3>
-                <p><strong>Cabaña:</strong> ${reserva.cabana?.nombre || reservas.cabanaId || 'No especificado'}</p>
+                <p><strong>Cabaña:</strong> ${reserva.cabana?.nombre || reserva.cabanaId || 'No especificado'}</p>
                 <p><strong>Fecha de llegada:</strong> ${reserva.checkin}</p>
                 <p><strong>Fecha de salida:</strong> ${reserva.checkout}</p>
                 <p><strong>Adultos:</strong> ${reserva.adults}</p>

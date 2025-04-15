@@ -1,10 +1,16 @@
 import React, { useState, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { createReserva } from '../api';
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://rokadan-backend.onrender.com/api',
+  timeout: 10000,
+});
 
 function Reservas() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const { user, isAuthenticated } = useContext(AuthContext);
     const [reservationData, setReservationData] = useState({
         cabana: id || '',
@@ -50,43 +56,33 @@ function Reservas() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!isAuthenticated) {
+            alert('Debes iniciar sesión para realizar una reserva.');
+            navigate('/login');
+            return;
+        }
+
+        // Validar fechas
+        if (new Date(reservationData.checkin) >= new Date(reservationData.checkout)) {
+            alert('La fecha de salida debe ser posterior a la fecha de llegada.');
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
-        if (!isAuthenticated) {
-            setError('Debes iniciar sesión para realizar una reserva.');
-            setLoading(false);
-            return;
-        }
-
-        if (new Date(reservationData.checkin) >= new Date(reservationData.checkout)) {
-            setError('La fecha de salida debe ser posterior a la fecha de llegada.');
-            setLoading(false);
-            return;
-        }
-
         try {
-            await createReserva({
+            const response = await api.post('/reservas', {
                 ...reservationData,
                 userId: user.id
             });
 
-            alert(`Reserva realizada con éxito para ${user.nombre}.`);
-            setReservationData({
-                cabana: '',
-                checkin: '',
-                checkout: '',
-                adults: 1,
-                children: 0,
-                extras: [],
-                userId: user.id
-            });
+            alert(`Reserva realizada con éxito para ${user.nombre}. Para más detalles, dirígete a la sección "Mis Reservas".`);
+            navigate('/misreservas');
         } catch (err) {
-            console.error('Error al crear reserva:', err);
-            setError(
-                err.message ||
-                'Error al realizar la reserva. Por favor intente nuevamente.'
-            );
+            console.error("Error al crear reserva:", err);
+            setError(err.response?.data?.message || 'Error al crear la reserva. Por favor intente nuevamente.');
         } finally {
             setLoading(false);
         }
@@ -95,6 +91,11 @@ function Reservas() {
     return (
         <main className="container my-5">
             <h1 className="text-center text-success">Reservar Cabaña</h1>
+            {error && (
+                <div className="alert alert-danger text-center">
+                    {error}
+                </div>
+            )}
             {isAuthenticated ? (
                 <form onSubmit={handleSubmit} className="mt-4">
                     <div className="mb-3">
@@ -176,7 +177,13 @@ function Reservas() {
                             </div>
                         ))}
                     </div>
-                    <button type="submit" className="btn btn-success">Confirmar Reserva</button>
+                    <button 
+                        type="submit" 
+                        className="btn btn-success"
+                        disabled={loading}
+                    >
+                        {loading ? 'Procesando...' : 'Confirmar Reserva'}
+                    </button>
                 </form>
             ) : (
                 <p className="text-center text-danger">Debes iniciar sesión para realizar una reserva.</p>

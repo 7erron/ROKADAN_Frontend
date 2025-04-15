@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getCabanaById } from '../api';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://rokadan-backend.onrender.com/api',
+  timeout: 10000,
+});
 
 function DetalleCabana() {
     const { id } = useParams();
@@ -13,28 +16,15 @@ function DetalleCabana() {
     useEffect(() => {
         const fetchCabana = async () => {
             try {
-                const data = await getCabanaById(id);
-                
-                // Manejo de diferentes estructuras de respuesta
-                const cabanaData = data.data?.cabana || data.cabana || data;
-                
-                if (!cabanaData) {
-                    throw new Error('No se encontró la cabaña');
-                }
-
-                // Establecer imagen por defecto si no viene
-                if (!cabanaData.imagen) {
-                    cabanaData.imagen = 'https://via.placeholder.com/800x600?text=Imagen+no+disponible';
-                }
-
+                const response = await api.get(`/cabanas/${id}`);
+                // Manejo flexible de la respuesta
+                const cabanaData = response.data?.cabana || 
+                                 response.data?.data?.cabana || 
+                                 response.data;
                 setCabana(cabanaData);
-                setError(null);
             } catch (err) {
-                console.error("Error al cargar cabaña:", err);
-                setError(
-                    err.message ||
-                    'Error al cargar los detalles de la cabaña'
-                );
+                console.error("Error fetching cabin details:", err);
+                setError(err.response?.data?.message || "Error al cargar los detalles de la cabaña");
             } finally {
                 setLoading(false);
             }
@@ -44,16 +34,21 @@ function DetalleCabana() {
     }, [id]);
 
     if (loading) {
-        return <LoadingSpinner message="Cargando detalles de la cabaña..." />;
+        return (
+            <div className="container my-5 text-center">
+                <div className="spinner-border text-success" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        );
     }
 
     if (error) {
         return (
-            <ErrorMessage 
-                message={error}
-                actionText="Volver a Cabañas"
-                actionLink="/cabanas"
-            />
+            <div className="container my-5 text-center">
+                <div className="alert alert-danger">{error}</div>
+                <Link to="/cabanas" className="btn btn-primary mt-3">Volver a Cabañas</Link>
+            </div>
         );
     }
 
@@ -61,10 +56,7 @@ function DetalleCabana() {
         return (
             <div className="container my-5 text-center">
                 <h2>Cabaña no encontrada</h2>
-                <p>La cabaña solicitada no existe o no está disponible</p>
-                <Link to="/cabanas" className="btn btn-primary mt-3">
-                    Volver a Cabañas
-                </Link>
+                <Link to="/cabanas" className="btn btn-primary mt-3">Volver a Cabañas</Link>
             </div>
         );
     }
@@ -72,53 +64,28 @@ function DetalleCabana() {
     return (
         <div className="container my-5">
             <div className="row">
-                <div className="col-md-6 mb-4 mb-md-0">
+                <div className="col-md-6">
                     <img 
-                        src={cabana.imagen}
-                        alt={`Cabaña ${cabana.nombre}`}
+                        src={cabana.imagen} 
+                        alt={cabana.nombre} 
                         className="img-fluid rounded shadow"
-                        style={{
-                            height: "400px",
-                            width: "100%",
-                            objectFit: "cover"
-                        }}
-                        onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/800x600?text=Imagen+no+disponible';
-                        }}
+                        style={{height: "400px", width: "100%", objectFit: "cover"}}
                     />
                 </div>
                 <div className="col-md-6">
                     <h1 className="text-success mb-3">{cabana.nombre}</h1>
                     <p className="lead">{cabana.descripcion}</p>
-                    
                     <ul className="list-group mb-4">
-                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Precio por noche:</strong>
-                            <span>${cabana.precio.toLocaleString('es-CL')}</span>
+                        <li className="list-group-item">
+                            <strong>Precio:</strong> ${cabana.precio?.toLocaleString() || '0'} por noche
                         </li>
-                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Capacidad:</strong>
-                            <span>{cabana.capacidad} personas</span>
-                        </li>
-                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                            <strong>Servicios incluidos:</strong>
-                            <span>{cabana.servicios?.join(', ') || 'No especificado'}</span>
+                        <li className="list-group-item">
+                            <strong>Capacidad:</strong> {cabana.capacidad || 'No especificada'} personas
                         </li>
                     </ul>
-                    
                     <div className="d-flex gap-3">
-                        <Link 
-                            to={`/reservas/${cabana.id}`} 
-                            className="btn btn-success btn-lg flex-grow-1"
-                        >
-                            Reservar ahora
-                        </Link>
-                        <Link 
-                            to="/cabanas" 
-                            className="btn btn-outline-secondary btn-lg"
-                        >
-                            Ver más cabañas
-                        </Link>
+                        <Link to={`/reservas/${cabana.id || cabana._id}`} className="btn btn-success">Reservar</Link>
+                        <Link to="/cabanas" className="btn btn-outline-secondary">Volver a Cabañas</Link>
                     </div>
                 </div>
             </div>
