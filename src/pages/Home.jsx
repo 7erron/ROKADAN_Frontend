@@ -3,29 +3,46 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Header from "../components/Header";
 import CabanaCard from "../components/CabanaCard";
-
-const api = axios.create({
-  baseURL: 'https://rokadan-backend.onrender.com/api',
-  timeout: 10000,
-});
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorMessage from "../components/ErrorMessage";
 
 function Home() {
     const [destacados, setDestacados] = useState([]);
     const [loading, setLoading] = useState(true);
     const [availableRooms, setAvailableRooms] = useState([]);
     const [searchPerformed, setSearchPerformed] = useState(false);
-    const [searchError, setSearchError] = useState(null);
+    const [error, setError] = useState(null);
+
+    // Datos mock para cuando el backend no responda (eliminar cuando el backend funcione)
+    const mockDestacados = [
+        {
+            id: 1,
+            nombre: "Cabaña Deluxe",
+            descripcion: "Cabaña premium con vista al lago",
+            precio: 150,
+            capacidad: 4,
+            imagen: "https://www.complejoturisticopucon.com/wp-content/uploads/SeoGoogle_.jpg"
+        },
+        {
+            id: 2,
+            nombre: "Cabaña Familiar",
+            descripcion: "Amplia cabaña para toda la familia",
+            precio: 200,
+            capacidad: 6,
+            imagen: "https://www.complejoturisticopucon.com/wp-content/uploads/SeoGoogle_.jpg"
+        }
+    ];
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get('/cabanas/destacadas');
-                // Manejo flexible de la respuesta
-                const destacadosData = response.data?.cabanas || response.data || response;
-                setDestacados(destacadosData);
-            } catch (error) {
-                console.error("Error fetching featured cabins:", error);
-                setDestacados([]);
+                const response = await axios.get('https://rokadan-backend.onrender.com/api/cabanas/destacadas');
+                setDestacados(response.data);
+            } catch (err) {
+                console.error("Error fetching featured cabins:", err);
+                // Usar datos mock si hay error (eliminar esta línea cuando el backend funcione)
+                setDestacados(mockDestacados);
+                setError("Error al cargar cabañas destacadas. Mostrando datos de ejemplo.");
             } finally {
                 setLoading(false);
             }
@@ -38,10 +55,10 @@ function Home() {
         const { checkin, checkout, adults, children } = searchData;
         setLoading(true);
         setSearchPerformed(true);
-        setSearchError(null);
+        setError(null);
 
         try {
-            const response = await api.get('/cabanas/disponibles', {
+            const response = await axios.get('https://rokadan-backend.onrender.com/api/cabanas/disponibles', {
                 params: {
                     fechaInicio: checkin,
                     fechaFin: checkout,
@@ -50,16 +67,20 @@ function Home() {
                 }
             });
             
-            // Manejo flexible de la respuesta
-            const availableData = response.data?.cabanas || response.data || response;
-            setAvailableRooms(availableData);
-        } catch (error) {
-            console.error("Error searching rooms:", error);
-            setSearchError(error.response?.data?.message || "Error al buscar cabañas disponibles. Por favor, intente nuevamente.");
+            setAvailableRooms(response.data);
+        } catch (err) {
+            console.error("Error searching rooms:", err);
+            setError(err.response?.data?.message || "Error al buscar cabañas disponibles. Por favor, intente nuevamente.");
             setAvailableRooms([]);
         } finally {
             setLoading(false);
         }
+    };
+
+    const resetSearch = () => {
+        setSearchPerformed(false);
+        setAvailableRooms([]);
+        setError(null);
     };
 
     return (
@@ -74,22 +95,14 @@ function Home() {
                                 "No se encontraron cabañas disponibles"}
                         </h2>
                         
-                        {searchError && (
-                            <div className="alert alert-danger text-center">
-                                {searchError}
-                            </div>
-                        )}
+                        {error && <ErrorMessage message={error} />}
 
                         {loading ? (
-                            <div className="text-center">
-                                <div className="spinner-border text-success" role="status">
-                                    <span className="visually-hidden">Cargando...</span>
-                                </div>
-                            </div>
+                            <LoadingSpinner message="Buscando cabañas disponibles..." />
                         ) : (
                             <div className="row">
                                 {availableRooms.map((room) => (
-                                    <div className="col-md-4 mb-4" key={room.id || room._id}>
+                                    <div className="col-md-4 mb-4" key={room.id}>
                                         <CabanaCard 
                                             id={room.id}
                                             nombre={room.nombre}
@@ -106,10 +119,7 @@ function Home() {
                         <div className="text-center mt-4">
                             <button 
                                 className="btn btn-secondary"
-                                onClick={() => {
-                                    setSearchPerformed(false);
-                                    setAvailableRooms([]);
-                                }}
+                                onClick={resetSearch}
                             >
                                 Volver al inicio
                             </button>
@@ -155,16 +165,14 @@ function Home() {
                             </div>
                         </div>
 
+                        {error && !loading && <ErrorMessage message={error} />}
+
                         {loading ? (
-                            <div className="text-center">
-                                <div className="spinner-border text-success" role="status">
-                                    <span className="visually-hidden">Cargando...</span>
-                                </div>
-                            </div>
+                            <LoadingSpinner message="Cargando cabañas destacadas..." />
                         ) : (
                             <div className="row">
                                 {destacados.map((cabana) => (
-                                    <div className="col-md-6 mb-4" key={cabana.id || cabana._id}>
+                                    <div className="col-md-6 mb-4" key={cabana.id}>
                                         <div className="card h-100">
                                             <img
                                                 src={cabana.imagen}
@@ -176,7 +184,7 @@ function Home() {
                                                 <h5 className="card-title">{cabana.nombre}</h5>
                                                 <p className="card-text">{cabana.descripcion}</p>
                                                 <Link
-                                                    to={`/cabanas/${cabana.id || cabana._id}`}
+                                                    to={`/cabanas/${cabana.id}`}
                                                     className="btn btn-success"
                                                 >
                                                     Ver detalles
