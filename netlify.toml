@@ -1,10 +1,12 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "functions"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
+  VITE_API_URL = "https://rokadan-backend.onrender.com"
 
 # Configuración para SPA (Single Page Application)
 [[redirects]]
