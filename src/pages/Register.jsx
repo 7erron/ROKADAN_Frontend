@@ -62,31 +62,40 @@ function Register() {
         setApiError(null);
         
         if (validateForm()) {
-            try {
-                const response = await axios.post(
-                    'https://rokadan-backend.onrender.com/api/auth/registrar',
-                    {
-                        nombre: formData.nombre,
-                        apellido: formData.apellido,
-                        email: formData.email,
-                        telefono: formData.telefono,
-                        password: formData.password 
-                    }
-                );
-                
-                // Guardar token y datos de usuario
-                login({ 
-                    token: response.data.token,
-                    user: response.data.data.usuario
-                });
-                
-                navigate('/');
-            } catch (error) {
-                console.error("Error en registro:", error);
-                setApiError(error.response?.data?.message || "Error al registrar usuario");
+          try {
+            const response = await axios.post(
+              'https://rokadan-backend.onrender.com/api/auth/registrar',
+              {
+                nombre: formData.nombre.trim(),
+                apellido: formData.apellido.trim(),
+                email: formData.email.toLowerCase().trim(),
+                telefono: formData.telefono.trim(),
+                password: formData.password,
+                passwordConfirm: formData.confirmPassword
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+            
+            if (response.data && response.data.token) {
+              login({
+                token: response.data.token,
+                user: response.data.data.usuario
+              });
+              navigate('/');
             }
+          } catch (error) {
+            console.error("Error en registro:", error);
+            const errorMessage = error.response?.data?.errors?.[0]?.msg || 
+                               error.response?.data?.message || 
+                               "Error al registrar usuario";
+            setApiError(errorMessage);
+          }
         }
-    };
+      };
 
     return (
         <div className="container my-4">
