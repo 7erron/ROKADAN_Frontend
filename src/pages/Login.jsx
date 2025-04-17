@@ -9,8 +9,8 @@ function Login() {
     const navigate = useNavigate();
     
     const [formData, setFormData] = useState({
-        correo: '',
-        pass: ''
+        email: '',
+        password: ''
     });
     
     const [errors, setErrors] = useState({
@@ -32,10 +32,10 @@ function Login() {
     
     const validateForm = () => {
         const newErrors = {
-            correo: formData.correo === '',
-            correoFormat: formData.correo !== '' && !formData.correo.includes('@'),
-            pass: formData.pass === '',
-            passLength: formData.pass !== '' && formData.pass.length < 6
+            email: formData.email === '',
+            emailFormat: formData.email !== '' && !formData.email.includes('@'),
+            password: formData.password === '',
+            passwordLength: formData.password !== '' && formData.password.length < 6
         };
         
         setErrors(newErrors);
@@ -51,8 +51,8 @@ function Login() {
                 const response = await axios.post(
                     'https://rokadan-backend.onrender.com/api/auth/login',
                     {
-                        email: formData.correo, // Cambio de correo a email
-                        password: formData.pass // Cambio de pass a password
+                        email: formData.email,
+                        password: formData.password
                     }
                 );
                 
@@ -96,9 +96,9 @@ function Login() {
                                     <input 
                                         type="email" 
                                         className="form-control" 
-                                        id="correo" 
-                                        name="correo" 
-                                        value={formData.correo}
+                                        id="email" 
+                                        name="email" 
+                                        value={formData.email}
                                         onChange={handleChange}
                                     />
                                 </div>
@@ -113,9 +113,9 @@ function Login() {
                                     <input 
                                         type="password" 
                                         className="form-control" 
-                                        id="pass" 
-                                        name="pass" 
-                                        value={formData.pass}
+                                        id="password" 
+                                        name="password" 
+                                        value={formData.password}
                                         onChange={handleChange}
                                     />
                                 </div>

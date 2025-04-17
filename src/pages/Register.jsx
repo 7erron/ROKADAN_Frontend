@@ -10,10 +10,10 @@ function Register() {
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
-        correo: '',
+        email: '',
         telefono: '',
-        pass: '',
-        confirmPass: ''
+        password: '',
+        confirmPassword: ''
     });
     
     const [errors, setErrors] = useState({
@@ -43,14 +43,14 @@ function Register() {
         const newErrors = {
             nombre: formData.nombre === '',
             apellido: formData.apellido === '',
-            correo: formData.correo === '',
-            correoFormat: formData.correo !== '' && !formData.correo.includes('@'),
+            email: formData.email === '',
+            emailFormat: formData.email !== '' && !formData.email.includes('@'),
             telefono: formData.telefono === '',
             telefonoFormat: formData.telefono !== '' && !/^\d{9,10}$/.test(formData.telefono),
-            pass: formData.pass === '',
-            passLength: formData.pass !== '' && formData.pass.length < 6,
-            confirmPass: formData.confirmPass === '',
-            passwordsMatch: formData.pass !== formData.confirmPass && formData.confirmPass !== ''
+            password: formData.password === '',
+            passwordLength: formData.password !== '' && formData.password.length < 6,
+            confirmPassword: formData.confirmPassword === '',
+            passwordsMatch: formData.password !== formData.confirmPassword && formData.confirmPassword !== ''
         };
         
         setErrors(newErrors);
@@ -68,9 +68,9 @@ function Register() {
                     {
                         nombre: formData.nombre,
                         apellido: formData.apellido,
-                        email: formData.correo,
+                        email: formData.email,
                         telefono: formData.telefono,
-                        password: formData.pass 
+                        password: formData.password 
                     }
                 );
                 
@@ -136,9 +136,9 @@ function Register() {
                                     <input 
                                         type="email" 
                                         className="form-control" 
-                                        id="correo" 
-                                        name="correo" 
-                                        value={formData.correo}
+                                        id="email" 
+                                        name="email" 
+                                        value={formData.email}
                                         onChange={handleChange}
                                         placeholder="ejemplo@correo.com"
                                     />
@@ -175,9 +175,9 @@ function Register() {
                                         <input 
                                             type="password" 
                                             className="form-control" 
-                                            id="pass" 
-                                            name="pass" 
-                                            value={formData.pass}
+                                            id="password"
+                                            name="password"
+                                            value={formData.password}
                                             onChange={handleChange}
                                             placeholder="Ingrese su contraseña"
                                         />
@@ -193,9 +193,9 @@ function Register() {
                                         <input 
                                             type="password" 
                                             className="form-control" 
-                                            id="confirmPass" 
-                                            name="confirmPass" 
-                                            value={formData.confirmPass}
+                                            id="confirmPassword"
+                                            name="confirmPassword"
+                                            value={formData.confirmPassword}
                                             onChange={handleChange}
                                             placeholder="Confirme su contraseña"
                                         />
