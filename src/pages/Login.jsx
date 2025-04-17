@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { loginUser } from '../api';
+import axios from 'axios';
 
 
 function Login() {
@@ -20,7 +20,7 @@ function Login() {
         passLength: false
     });
     
-    const [submitError, setSubmitError] = useState(null);
+    const [apiError, setApiError] = useState(null);
     
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -44,26 +44,34 @@ function Login() {
     
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitError(null);
+        setApiError(null);
         
-        if (!validateForm()) return;
-
-        try {
-            const userData = await loginUser({
-                email: formData.correo,
-                password: formData.pass
-            });
-            
-            login(userData);
-            
-            if (userData.es_admin) {
-                navigate('/admin');
-            } else {
-                navigate('/');
+        if (validateForm()) {
+            try {
+                const response = await axios.post(
+                    'https://rokadan-backend.onrender.com/api/auth/login',
+                    {
+                        email: formData.correo, // Cambio de correo a email
+                        password: formData.pass // Cambio de pass a password
+                    }
+                );
+                
+                // Guardar token y datos de usuario
+                login({ 
+                    token: response.data.token,
+                    user: response.data.data.usuario
+                });
+                
+                // Redirigir según rol
+                if (response.data.data.usuario.es_admin) {
+                    navigate('/admin');
+                } else {
+                    navigate('/');
+                }
+            } catch (error) {
+                console.error("Error en login:", error);
+                setApiError(error.response?.data?.message || "Error al iniciar sesión");
             }
-        } catch (err) {
-            console.error('Error en login:', err);
-            setSubmitError(err.message || 'Credenciales incorrectas');
         }
     };
 

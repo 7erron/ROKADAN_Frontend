@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { registerUser } from '../api';
+import axios from 'axios';
 
 function Register() {
     const { login } = useContext(AuthContext);
@@ -29,7 +29,7 @@ function Register() {
         passwordsMatch: false
     });
     
-    const [submitError, setSubmitError] = useState(null);
+    const [apiError, setApiError] = useState(null);
     
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -59,25 +59,32 @@ function Register() {
     
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitError(null);
+        setApiError(null);
         
-        if (!validateForm()) return;
-
-        try {
-            const userData = await registerUser({
-                nombre: formData.nombre,
-                apellido: formData.apellido,
-                email: formData.correo,
-                telefono: formData.telefono,
-                password: formData.pass
-            });
-            
-            login(userData);
-            navigate('/');
-            alert("¡Registro exitoso! Bienvenido/a " + formData.nombre);
-        } catch (err) {
-            console.error('Error en registro:', err);
-            setSubmitError(err.message || 'Error al registrar el usuario');
+        if (validateForm()) {
+            try {
+                const response = await axios.post(
+                    'https://rokadan-backend.onrender.com/api/auth/registrar',
+                    {
+                        nombre: formData.nombre,
+                        apellido: formData.apellido,
+                        email: formData.correo,
+                        telefono: formData.telefono,
+                        password: formData.pass 
+                    }
+                );
+                
+                // Guardar token y datos de usuario
+                login({ 
+                    token: response.data.token,
+                    user: response.data.data.usuario
+                });
+                
+                navigate('/');
+            } catch (error) {
+                console.error("Error en registro:", error);
+                setApiError(error.response?.data?.message || "Error al registrar usuario");
+            }
         }
     };
 
