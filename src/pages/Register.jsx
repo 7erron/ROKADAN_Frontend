@@ -2,11 +2,13 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import Notification from '../components/Notification';
+import { FaCheckCircle } from 'react-icons/fa';
 
 function Register() {
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
-    
+
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
@@ -57,9 +59,11 @@ function Register() {
         return !Object.values(newErrors).some(error => error);
     };
     
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState('');
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setApiError(null);
         
         if (validateForm()) {
           try {
@@ -80,25 +84,47 @@ function Register() {
               }
             );
             
-            if (response.data && response.data.token) {
-              login({
-                token: response.data.token,
-                user: response.data.data.usuario
-              });
-              navigate('/');
+            if (response.data.status === 'success') {
+                login({ 
+                    email: formData.correo,
+                    nombre: formData.nombre,
+                    apellido: formData.apellido,
+                    id: response.data.data.usuario.id
+                });
+                
+                // Mostrar notificación de éxito
+                setNotificationMessage({
+                    text: `¡Felicidades ${formData.nombre}! Tu registro fue exitoso`,
+                    type: 'success'
+                });
+                setShowNotification(true);
+                
+                // Ocultar después de 5 segundos
+                setTimeout(() => setShowNotification(false), 5000);
+                
+                // Redirigir a home
+                navigate('/');
             }
-          } catch (error) {
+        } catch (error) {
             console.error("Error en registro:", error);
-            const errorMessage = error.response?.data?.errors?.[0]?.msg || 
-                               error.response?.data?.message || 
-                               "Error al registrar usuario";
-            setApiError(errorMessage);
-          }
+            setNotificationMessage({
+                text: error.response?.data?.message || 'Error en el registro',
+                type: 'error'
+            });
+            setShowNotification(true);
         }
-      };
+    }
+};
 
     return (
         <div className="container my-4">
+            {showNotification && (
+                <Notification 
+                    message={notificationMessage.text}
+                    type={notificationMessage.type}
+                    onClose={() => setShowNotification(false)}
+                />
+            )}
             <div className="row justify-content-center">
                 <div className="col-md-8">
                     <div className="card">
