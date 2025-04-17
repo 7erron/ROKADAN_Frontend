@@ -5,7 +5,7 @@ import Footer from "./components/Footer";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import QuienesSomos from "./pages/QuienesSomos";
-import Cabañas from "./pages/Cabanas";
+import Cabanas from "./pages/Cabanas";
 import Servicios from "./pages/Servicios";
 import Reservas from "./pages/Reservas";
 import MisReservas from "./pages/MisReservas";
@@ -31,7 +31,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/quienessomos" element={<QuienesSomos />} />
-          <Route path="/cabañas" element={<Cabañas />} />
+          <Route path="/cabanas" element={<Cabanas />} />
           <Route path="/cabanas/:id" element={<DetalleCabaña />} />
           <Route path="/servicios" element={<Servicios />} />
           <Route path="/reservas/:id" element={<Reservas />} />
