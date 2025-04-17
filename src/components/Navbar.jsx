@@ -42,7 +42,7 @@ function Navbar() {
                                     </Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link className="nav-link text-light" to="/cabañas">
+                                    <Link className="nav-link text-light" to="/cabanas">
                                         <button className="btn btn-outline-light">
                                             <i className="bi bi-unlock"></i>
                                             &nbsp; CABAÑAS

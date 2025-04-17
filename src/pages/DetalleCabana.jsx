@@ -16,16 +16,13 @@ function DetalleCabana() {
     useEffect(() => {
         const fetchCabana = async () => {
             try {
-                const response = await api.get(`/cabanas/${id}`);
-                // Manejo flexible de la respuesta
-                const cabanaData = response.data?.cabana || 
-                                 response.data?.data?.cabana || 
-                                 response.data;
-                setCabana(cabanaData);
+                const response = await axios.get(`https://rokadan-backend.onrender.com/api/cabanas/${id}`);
+                const data = response.data.data?.cabana || response.data.cabana || response.data;
+                setCabana(data);
+                setLoading(false);
             } catch (err) {
                 console.error("Error fetching cabin details:", err);
-                setError(err.response?.data?.message || "Error al cargar los detalles de la cabaña");
-            } finally {
+                setError("Error al cargar los detalles de la cabaña");
                 setLoading(false);
             }
         };
