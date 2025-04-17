@@ -16,51 +16,31 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    # Headers de seguridad básicos
-    X-Frame-Options = "DENY"
+   X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    
-    # Content Security Policy actualizada
     Content-Security-Policy = """
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval';
-      style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+      style-src 'self' 'unsafe-inline';
       img-src 'self' data: 
+        https://*.freepik.com 
+        https://*.muscache.com 
+        https://via.placeholder.com 
         https://www.complejoturisticopucon.com 
         https://img.freepik.com 
-        https://*.freepik.com 
-        https://a0.muscache.com 
-        https://*.muscache.com;
-      font-src 'self' https://cdn.jsdelivr.net;
-      connect-src 'self' 
-        https://rokadan-backend.onrender.com 
-        https://api.rokadan.com;
+        https://a0.muscache.com;
+      font-src 'self';
+      connect-src 'self' https://rokadan-backend.onrender.com;
       frame-src 'none';
       object-src 'none';
-      base-uri 'self';
-      form-action 'self';
     """
 
-# Configuración para rutas específicas (opcional)
-[[headers]]
-  for = "/admin/*"
-  [headers.values]
-    Content-Security-Policy = """
-      default-src 'self';
-      script-src 'self' 'unsafe-inline';
-      style-src 'self' 'unsafe-inline';
-      img-src 'self' data:;
-      connect-src 'self' https://rokadan-backend.onrender.com;
-    """
-
-# Si usas funciones serverless (opcional)
 [functions]
   directory = "functions"
   node_bundler = "esbuild"
 
-# Configuración de contexto (opcional)
 [context.production.environment]
   REACT_APP_API_URL = "https://rokadan-backend.onrender.com"
   REACT_APP_ENV = "production"
