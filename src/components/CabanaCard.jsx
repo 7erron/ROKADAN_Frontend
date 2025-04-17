@@ -1,7 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-function CabanaCard({ id, nombre, descripcion, precio, imagen, capacidad }) {
+function CabanaCard({ 
+    id = '', 
+    nombre = '', 
+    descripcion = '', 
+    precio = 0, 
+    imagen = '', 
+    capacidad = 0 
+  }) {
     return (
         <div className="card mb-4">
             <img src={imagen} className="card-img-top" alt={nombre} style={{ height: "200px", objectFit: "cover" }} />

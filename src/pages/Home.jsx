@@ -37,13 +37,12 @@ function Home() {
         const fetchData = async () => {
             try {
                 const response = await axios.get('https://rokadan-backend.onrender.com/api/cabanas/destacadas');
-                setDestacados(response.data);
+                const data = response.data.data || response.data || [];
+                setDestacados(Array.isArray(data) ? data : []);
+                setLoading(false);
             } catch (err) {
-                console.error("Error fetching featured cabins:", err);
-                // Usar datos mock si hay error (eliminar esta línea cuando el backend funcione)
-                setDestacados(mockDestacados);
-                setError("Error al cargar cabañas destacadas. Mostrando datos de ejemplo.");
-            } finally {
+                console.error("Error fetching featured cabins:", error);
+                setDestacados([]); // Asegurar que siempre sea un array
                 setLoading(false);
             }
         };
@@ -55,10 +54,10 @@ function Home() {
         const { checkin, checkout, adults, children } = searchData;
         setLoading(true);
         setSearchPerformed(true);
-        setError(null);
+        setSearchError(null);
 
         try {
-            const response = await axios.get('https://rokadan-backend.onrender.com/api/cabanas/disponibles', {
+            const response = await axios.get('/api/cabanas/disponibles', {
                 params: {
                     fechaInicio: checkin,
                     fechaFin: checkout,
@@ -67,20 +66,15 @@ function Home() {
                 }
             });
             
-            setAvailableRooms(response.data);
-        } catch (err) {
-            console.error("Error searching rooms:", err);
-            setError(err.response?.data?.message || "Error al buscar cabañas disponibles. Por favor, intente nuevamente.");
+            const data = response.data.data || response.data || [];
+            setAvailableRooms(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Error searching rooms:", error);
+            setSearchError("Error al buscar cabañas disponibles. Por favor, intente nuevamente.");
             setAvailableRooms([]);
         } finally {
             setLoading(false);
         }
-    };
-
-    const resetSearch = () => {
-        setSearchPerformed(false);
-        setAvailableRooms([]);
-        setError(null);
     };
 
     return (
@@ -95,10 +89,18 @@ function Home() {
                                 "No se encontraron cabañas disponibles"}
                         </h2>
                         
-                        {error && <ErrorMessage message={error} />}
+                        {searchError && (
+                            <div className="alert alert-danger text-center">
+                                {searchError}
+                            </div>
+                        )}
 
                         {loading ? (
-                            <LoadingSpinner message="Buscando cabañas disponibles..." />
+                            <div className="text-center">
+                                <div className="spinner-border text-success" role="status">
+                                    <span className="visually-hidden">Cargando...</span>
+                                </div>
+                            </div>
                         ) : (
                             <div className="row">
                                 {availableRooms.map((room) => (
@@ -119,7 +121,10 @@ function Home() {
                         <div className="text-center mt-4">
                             <button 
                                 className="btn btn-secondary"
-                                onClick={resetSearch}
+                                onClick={() => {
+                                    setSearchPerformed(false);
+                                    setAvailableRooms([]);
+                                }}
                             >
                                 Volver al inicio
                             </button>
@@ -171,8 +176,8 @@ function Home() {
                             <LoadingSpinner message="Cargando cabañas destacadas..." />
                         ) : (
                             <div className="row">
-                                {destacados.map((cabana) => (
-                                    <div className="col-md-6 mb-4" key={cabana.id}>
+                            {destacados.map((cabana) => (
+                                <div className="col-md-6 mb-4" key={cabana.id}>
                                         <div className="card h-100">
                                             <img
                                                 src={cabana.imagen}
