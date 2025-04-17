@@ -6,7 +6,7 @@ import Notification from '../components/Notification';
 import { FaCheckCircle } from 'react-icons/fa';
 
 function Register() {
-    const { login } = useContext(AuthContext);
+    const { register } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
@@ -66,6 +66,17 @@ function Register() {
         e.preventDefault();
         
         if (validateForm()) {
+            try {
+                await register(formData);
+                // Redirigir a la página principal
+                navigate('/');
+                // Mostrar alerta de registro exitoso
+                alert("¡Registro exitoso! Bienvenido/a " + formData.nombre);
+            } catch (error) {
+                console.error("Error en registro:", error);
+                alert("Error al registrar. Por favor, intente nuevamente.");
+            }
+
           try {
             const response = await axios.post(
               'https://rokadan-backend.onrender.com/api/auth/registrar',

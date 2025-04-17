@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 export const AuthContext = createContext();
 
@@ -17,6 +18,32 @@ export const AuthProvider = ({ children }) => {
       setIsAdmin(userData.isAdmin || false);
     }
   }, []);
+
+  // Función para registrar usuario
+  const register = async (userData) => {
+    try {
+      const response = await axios.post('/api/auth/register', {
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        email: userData.correo,
+        telefono: userData.telefono,
+        password: userData.pass
+      });
+      
+      // Iniciar sesión automáticamente después del registro
+      login({
+        email: userData.correo,
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        id: response.data.id || Date.now()
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error en registro:", error);
+      throw error;
+    }
+  };
   
   // Función para iniciar sesión
   const login = (userData) => {
