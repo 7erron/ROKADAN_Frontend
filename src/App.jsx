@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import axios from "axios";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar"; 
 import Footer from "./components/Footer";
@@ -20,6 +21,18 @@ import AdminServicioForm from "./pages/admin/AdminServicioForm";
 import AdminReservaDetalle from "./pages/admin/AdminReservaDetalle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
+
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'https://rokadan-backend.onrender.com';
+axios.defaults.headers.post['Content-Type'] = 'application/json';
+
+// Opcional: Agrega esto si usas autenticación JWT
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 function App() {
   return (
