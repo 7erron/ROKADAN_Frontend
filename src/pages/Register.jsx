@@ -44,12 +44,12 @@ function Register() {
         const newErrors = {
             nombre: formData.nombre === '',
             apellido: formData.apellido === '',
-            correo: formData.correo === '',
-            correoFormat: formData.correo !== '' && !formData.correo.includes('@'),
+            correo: formData.email === '',
+            correoFormat: formData.email !== '' && !formData.correo.includes('@'),
             telefono: formData.telefono === '',
             telefonoFormat: formData.telefono !== '' && !/^\d{9,10}$/.test(formData.telefono),
             pass: formData.pass === '',
-            passLength: formData.pass !== '' && formData.pass.length < 6,
+            passLength: formData.password !== '' && formData.pass.length < 6,
             confirmPass: formData.confirmPass === '',
             passwordsMatch: formData.pass !== formData.confirmPass && formData.confirmPass !== '',
             serverError: null
@@ -68,9 +68,9 @@ function Register() {
                 const response = await api.post('/auth/registrar', {
                     nombre: formData.nombre,
                     apellido: formData.apellido,
-                    email: formData.correo,
+                    email: formData.email,
                     telefono: formData.telefono,
-                    password: formData.pass,
+                    password: formData.password,
                     confirmPassword: formData.confirmPass
                 });
                 
