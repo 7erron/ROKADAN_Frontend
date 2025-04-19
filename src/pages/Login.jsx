@@ -1,23 +1,24 @@
 import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api';
 
 function Login() {
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
+    const location = useLocation();
     
     const [formData, setFormData] = useState({
-        correo: '',
-        pass: ''
+        email: '',  // Cambiado de 'correo' a 'email'
+        password: '' // Cambiado de 'pass' a 'password'
     });
     
     const [errors, setErrors] = useState({
-        correo: false,
-        correoFormat: false,
-        pass: false,
-        passLength: false,
-        serverError: null
+        email: false,
+        emailFormat: false,
+        password: false,
+        serverError: location.state?.sessionExpired ? 
+            'Tu sesión ha expirado. Por favor inicia sesión nuevamente.' : null
     });
     
     const [isLoading, setIsLoading] = useState(false);
@@ -32,10 +33,9 @@ function Login() {
     
     const validateForm = () => {
         const newErrors = {
-            correo: formData.correo === '',
-            correoFormat: formData.correo !== '' && !formData.correo.includes('@'),
-            pass: formData.pass === '',
-            passLength: formData.pass !== '' && formData.pass.length < 6,
+            email: formData.email === '',
+            emailFormat: formData.email !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email),
+            password: formData.password === '',
             serverError: null
         };
         
@@ -50,17 +50,19 @@ function Login() {
             setIsLoading(true);
             try {
                 const response = await api.post('/auth/login', {
-                    email: formData.correo,
-                    password: formData.pass
+                    email: formData.email,
+                    password: formData.password
                 });
                 
-                login(response.data.data.usuario);
+                // Guardar el token en el contexto de autenticación
+                login({
+                    token: response.data.token,
+                    user: response.data.data.usuario
+                });
                 
-                if (response.data.data.usuario.es_admin) {
-                    navigate('/admin');
-                } else {
-                    navigate('/');
-                }
+                // Redirigir a la página previa o al home
+                const from = location.state?.from?.pathname || '/';
+                navigate(from, { replace: true });
             } catch (error) {
                 console.error('Error en login:', error);
                 let errorMessage = 'Error al iniciar sesión';
@@ -92,43 +94,40 @@ function Login() {
                             <h3 className="mb-0">Login</h3>
                         </div>
                         <div className="card-body">
+                            {errors.serverError && 
+                                <div className="alert alert-danger">{errors.serverError}</div>
+                            }
                             <form onSubmit={handleSubmit}>
-                                {errors.serverError && 
-                                    <div className="alert alert-danger">{errors.serverError}</div>
-                                }
                                 <div className="mb-3">
-                                    {errors.correo && 
-                                        <div className="alert alert-danger">Debes ingresar tu email</div>
-                                    }
-                                    {errors.correoFormat && 
-                                        <div className="alert alert-danger">El formato del email no es válido</div>
-                                    }
-                                    <label htmlFor="correo" className="form-label">Email</label>
+                                    <label htmlFor="email" className="form-label">Email</label>
                                     <input 
                                         type="email" 
-                                        className="form-control" 
-                                        id="correo" 
-                                        name="correo" 
-                                        value={formData.correo}
+                                        className={`form-control ${errors.email || errors.emailFormat ? 'is-invalid' : ''}`}
+                                        id="email" 
+                                        name="email" 
+                                        value={formData.email}
                                         onChange={handleChange}
                                     />
+                                    {errors.email && 
+                                        <div className="invalid-feedback">Por favor ingresa tu email</div>
+                                    }
+                                    {errors.emailFormat && 
+                                        <div className="invalid-feedback">El formato del email no es válido</div>
+                                    }
                                 </div>
                                 <div className="mb-3">
-                                    {errors.pass && 
-                                        <div className="alert alert-danger">Debes ingresar tu contraseña</div>
-                                    }
-                                    {errors.passLength && 
-                                        <div className="alert alert-danger">Tu contraseña debe tener al menos 6 caracteres</div>
-                                    }
-                                    <label htmlFor="pass" className="form-label">Contraseña</label>
+                                    <label htmlFor="password" className="form-label">Contraseña</label>
                                     <input 
                                         type="password" 
-                                        className="form-control" 
-                                        id="pass" 
-                                        name="pass" 
-                                        value={formData.pass}
+                                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                                        id="password" 
+                                        name="password" 
+                                        value={formData.password}
                                         onChange={handleChange}
                                     />
+                                    {errors.password && 
+                                        <div className="invalid-feedback">Por favor ingresa tu contraseña</div>
+                                    }
                                 </div>
                                 <div className="d-grid">
                                     <button 
@@ -136,7 +135,7 @@ function Login() {
                                         className="btn btn-success"
                                         disabled={isLoading}
                                     >
-                                        {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
+                                        {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                                     </button>
                                 </div>
                                 <div className="mt-3 text-center">
