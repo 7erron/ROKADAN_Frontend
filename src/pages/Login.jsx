@@ -1,26 +1,26 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
-
+import api from '../api';
 
 function Login() {
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
     
     const [formData, setFormData] = useState({
-        email: '',
-        password: ''
+        correo: '',
+        pass: ''
     });
     
     const [errors, setErrors] = useState({
         correo: false,
         correoFormat: false,
         pass: false,
-        passLength: false
+        passLength: false,
+        serverError: null
     });
     
-    const [apiError, setApiError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -32,10 +32,11 @@ function Login() {
     
     const validateForm = () => {
         const newErrors = {
-            email: formData.email === '',
-            emailFormat: formData.email !== '' && !formData.email.includes('@'),
-            password: formData.password === '',
-            passwordLength: formData.password !== '' && formData.password.length < 6
+            correo: formData.correo === '',
+            correoFormat: formData.correo !== '' && !formData.correo.includes('@'),
+            pass: formData.pass === '',
+            passLength: formData.pass !== '' && formData.pass.length < 6,
+            serverError: null
         };
         
         setErrors(newErrors);
@@ -44,33 +45,40 @@ function Login() {
     
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setApiError(null);
         
         if (validateForm()) {
+            setIsLoading(true);
             try {
-                const response = await axios.post(
-                    'https://rokadan-backend.onrender.com/api/auth/login',
-                    {
-                        email: formData.email,
-                        password: formData.password
-                    }
-                );
-                
-                // Guardar token y datos de usuario
-                login({ 
-                    token: response.data.token,
-                    user: response.data.data.usuario
+                const response = await api.post('/auth/login', {
+                    email: formData.correo,
+                    password: formData.pass
                 });
                 
-                // Redirigir según rol
+                login(response.data.data.usuario);
+                
                 if (response.data.data.usuario.es_admin) {
                     navigate('/admin');
                 } else {
                     navigate('/');
                 }
             } catch (error) {
-                console.error("Error en login:", error);
-                setApiError(error.response?.data?.message || "Error al iniciar sesión");
+                console.error('Error en login:', error);
+                let errorMessage = 'Error al iniciar sesión';
+                
+                if (error.response) {
+                    if (error.response.status === 401) {
+                        errorMessage = 'Email o contraseña incorrectos';
+                    } else if (error.response.data?.message) {
+                        errorMessage = error.response.data.message;
+                    }
+                }
+                
+                setErrors({
+                    ...errors,
+                    serverError: errorMessage
+                });
+            } finally {
+                setIsLoading(false);
             }
         }
     };
@@ -85,6 +93,9 @@ function Login() {
                         </div>
                         <div className="card-body">
                             <form onSubmit={handleSubmit}>
+                                {errors.serverError && 
+                                    <div className="alert alert-danger">{errors.serverError}</div>
+                                }
                                 <div className="mb-3">
                                     {errors.correo && 
                                         <div className="alert alert-danger">Debes ingresar tu email</div>
@@ -96,9 +107,9 @@ function Login() {
                                     <input 
                                         type="email" 
                                         className="form-control" 
-                                        id="email" 
-                                        name="email" 
-                                        value={formData.email}
+                                        id="correo" 
+                                        name="correo" 
+                                        value={formData.correo}
                                         onChange={handleChange}
                                     />
                                 </div>
@@ -113,14 +124,20 @@ function Login() {
                                     <input 
                                         type="password" 
                                         className="form-control" 
-                                        id="password" 
-                                        name="password" 
-                                        value={formData.password}
+                                        id="pass" 
+                                        name="pass" 
+                                        value={formData.pass}
                                         onChange={handleChange}
                                     />
                                 </div>
                                 <div className="d-grid">
-                                    <button type="submit" className="btn btn-success">Iniciar Sesión</button>
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-success"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
+                                    </button>
                                 </div>
                                 <div className="mt-3 text-center">
                                     <p>¿No tienes una cuenta? <Link to="/register">Regístrate aquí</Link></p>
