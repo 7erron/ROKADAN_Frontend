@@ -19,14 +19,15 @@ function Register() {
     lowercase: false,
     uppercase: false,
     specialChar: false,
-    match: true
+    match: false
   });
 
   const [submitError, setSubmitError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({...formData, [name]: value});
+    const newFormData = {...formData, [name]: value};
+    setFormData(newFormData);
     
     // Validaciones solo para el campo password
     if (name === 'password') {
@@ -43,24 +44,29 @@ function Register() {
     
     // Validación para confirmPassword
     if (name === 'confirmPassword') {
-      setPasswordErrors({
-        ...passwordErrors,
-        match: value !== formData.password
-      });
-    }
-  };
+        setPasswordErrors({
+          ...passwordErrors,
+          match: value !== formData.password
+        });
+      }
+    };
 
-  const validateForm = () => {
-    return (
-      formData.nombre &&
-      formData.apellido &&
-      formData.email &&
-      formData.telefono &&
-      formData.password &&
-      formData.confirmPassword &&
-      !Object.values(passwordErrors).some(error => error)
-    );
-  };
+    const validateForm = () => {
+        return (
+          formData.nombre &&
+          formData.apellido &&
+          formData.email &&
+          formData.telefono &&
+          formData.password &&
+          formData.confirmPassword &&
+          !passwordErrors.length &&
+          !passwordErrors.number &&
+          !passwordErrors.lowercase &&
+          !passwordErrors.uppercase &&
+          !passwordErrors.specialChar &&
+          passwordsMatch() // Usamos la nueva función de verificación
+        );
+      };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -186,20 +192,20 @@ function Register() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
-                  <input
+                    <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
+                    <input
                     type="password"
-                    className={`form-control ${!passwordErrors.match && formData.confirmPassword ? 'is-invalid' : ''}`}
+                    className={`form-control ${formData.confirmPassword && !passwordsMatch() ? 'is-invalid' : ''}`}
                     id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirme su contraseña"
                     required
-                  />
-                  {!passwordErrors.match && formData.confirmPassword && (
+                    />
+                    {formData.confirmPassword && !passwordsMatch() && (
                     <div className="invalid-feedback">Las contraseñas no coinciden</div>
-                  )}
+                    )}
                 </div>
                 
                 <div className="form-check mb-3">
