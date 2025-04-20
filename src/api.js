@@ -78,7 +78,7 @@ export async function loginUser({ email, password }) {
 }
 
 export async function registerUser({ nombre, apellido, email, telefono, password, confirmPassword }) {
-  return makeRequest('post', '/auth/registrar', { 
+  return makeRequest('post', '/api/auth/registrar', { 
     nombre, 
     apellido, 
     email, 
