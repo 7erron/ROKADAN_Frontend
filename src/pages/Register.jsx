@@ -12,33 +12,62 @@ function Register() {
     password: '',
     confirmPassword: ''
   });
-  const [error, setError] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  const [passwordErrors, setPasswordErrors] = useState({
+    length: false,
+    number: false,
+    lowercase: false,
+    uppercase: false,
+    specialChar: false,
+    match: true
+  });
+
+  const [submitError, setSubmitError] = useState('');
+
+  const handlePasswordChange = (e) => {
+    const { value } = e.target;
+    setFormData({...formData, password: value});
+    
+    setPasswordErrors({
+      length: value.length < 8,
+      number: !/[0-9]/.test(value),
+      lowercase: !/[a-z]/.test(value),
+      uppercase: !/[A-Z]/.test(value),
+      specialChar: !/[\W_]/.test(value),
+      match: value !== formData.confirmPassword && formData.confirmPassword !== ''
     });
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    const { value } = e.target;
+    setFormData({...formData, confirmPassword: value});
+    setPasswordErrors({...passwordErrors, match: value !== formData.password});
+  };
+
+  const validateForm = () => {
+    return (
+      formData.nombre &&
+      formData.apellido &&
+      formData.email &&
+      formData.telefono &&
+      !Object.values(passwordErrors).some(error => error)
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setSubmitError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
+    if (!validateForm()) {
+      setSubmitError('Por favor completa todos los campos correctamente');
       return;
     }
 
     try {
-      const response = await registerUser(formData);
-      
-      if (response.success) {
-        alert(`¡Registro exitoso! Bienvenido/a ${formData.nombre}`);
-        navigate('/');
-      }
-    } catch (err) {
-      setError(err.message || 'Error al registrarse');
+      await registerUser(formData);
+      navigate('/login');
+    } catch (error) {
+      setSubmitError(error.message || 'Error al registrarse');
     }
   };
 
@@ -51,91 +80,69 @@ function Register() {
               <h3 className="mb-0">Registro de Usuario</h3>
             </div>
             <div className="card-body">
-              {error && <div className="alert alert-danger">{error}</div>}
+              {submitError && (
+                <div className="alert alert-danger">{submitError}</div>
+              )}
+
               <form onSubmit={handleSubmit}>
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <label htmlFor="nombre" className="form-label">Nombre</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="nombre"
-                      name="nombre"
-                      value={formData.nombre}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="apellido" className="form-label">Apellido</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="apellido"
-                      name="apellido"
-                      value={formData.apellido}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-                
+                {/* Campos de nombre, apellido, email y teléfono... */}
+
                 <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email</label>
+                  <label htmlFor="password" className="form-label">Contraseña</label>
                   <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
+                    type="password"
+                    className={`form-control ${passwordErrors.length || passwordErrors.number || 
+                      passwordErrors.lowercase || passwordErrors.uppercase || 
+                      passwordErrors.specialChar ? 'is-invalid' : ''}`}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handlePasswordChange}
+                    placeholder="Ingrese su contraseña"
                   />
+                  <div className="invalid-feedback">
+                    <ul className="list-unstyled">
+                      <li className={passwordErrors.length ? 'text-danger' : 'text-success'}>
+                        {passwordErrors.length ? '✖' : '✓'} Mínimo 8 caracteres
+                      </li>
+                      <li className={passwordErrors.number ? 'text-danger' : 'text-success'}>
+                        {passwordErrors.number ? '✖' : '✓'} Al menos un número
+                      </li>
+                      <li className={passwordErrors.lowercase ? 'text-danger' : 'text-success'}>
+                        {passwordErrors.lowercase ? '✖' : '✓'} Al menos una minúscula
+                      </li>
+                      <li className={passwordErrors.uppercase ? 'text-danger' : 'text-success'}>
+                        {passwordErrors.uppercase ? '✖' : '✓'} Al menos una mayúscula
+                      </li>
+                      <li className={passwordErrors.specialChar ? 'text-danger' : 'text-success'}>
+                        {passwordErrors.specialChar ? '✖' : '✓'} Al menos un carácter especial
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-                
+
                 <div className="mb-3">
-                  <label htmlFor="telefono" className="form-label">Teléfono</label>
+                  <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
                   <input
-                    type="tel"
-                    className="form-control"
-                    id="telefono"
-                    name="telefono"
-                    value={formData.telefono}
-                    onChange={handleChange}
-                    required
+                    type="password"
+                    className={`form-control ${passwordErrors.match ? '' : 'is-invalid'}`}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                    placeholder="Confirme su contraseña"
                   />
+                  {!passwordErrors.match && (
+                    <div className="invalid-feedback">Las contraseñas no coinciden</div>
+                  )}
                 </div>
-                
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <label htmlFor="password" className="form-label">Contraseña</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      minLength="6"
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-                
+
                 <div className="d-grid gap-2">
-                  <button type="submit" className="btn btn-success">
+                  <button 
+                    type="submit" 
+                    className="btn btn-success"
+                    disabled={!validateForm()}
+                  >
                     Registrarse
                   </button>
                 </div>

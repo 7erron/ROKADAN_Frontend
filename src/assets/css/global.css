@@ -66,3 +66,22 @@ main {
     transform: translateY(-20px);
     transition: all 0.3s ease-in;
   }
+
+  .password-requirements {
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+  
+  .password-valid {
+    color: #28a745;
+  }
+  
+  .password-invalid {
+    color: #dc3545;
+  }
+  
+  /* Para el botón deshabilitado */
+  .btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
