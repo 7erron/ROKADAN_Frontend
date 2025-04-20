@@ -21,7 +21,6 @@ function Navbar() {
                     <i className="bi bi-house-door me-2"></i>
                     CABAÑAS ROKADAN
                 </Link>
-                
                 <button 
                     className="navbar-toggler" 
                     type="button" 
