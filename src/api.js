@@ -88,9 +88,22 @@ export async function registerUser({ nombre, apellido, email, telefono, password
   });
 }
 
-export async function getCurrentUser() {
-  return makeRequest('get', '/auth/me');
-}
+export const getCurrentUser = async () => {
+  try {
+    const response = await api.get('/api/auth/me');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Error al obtener usuario' };
+  }
+};
+
+export const getCabanas = async () => {
+  return api.get('/api/cabanas');
+};
+
+export const getCabanaById = async (id) => {
+  return api.get(`/api/cabanas/${id}`);
+};
 
 // Funciones de reservas
 export async function createReserva(reservaData) {

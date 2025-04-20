@@ -25,17 +25,21 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    const login = (data) => {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        setAuthState({
-            token: data.token,
-            user: data.user,
-            isAuthenticated: true,
-            isAdmin: data.user?.es_admin || false
-        });
-    };
+    const login = async (credentials) => {
+        try {
+          const response = await loginUser(credentials); // Llama al backend real
+          const userData = response.user;
+          
+          const isAdminUser = userData.es_admin || false;
+          setUser(userData);
+          setIsAuthenticated(true);
+          setIsAdmin(isAdminUser);
+          localStorage.setItem('user', JSON.stringify(userData));
+        } catch (error) {
+          console.error('Login error:', error);
+          throw error;
+        }
+      };
 
     const logout = () => {
         localStorage.removeItem('token');
