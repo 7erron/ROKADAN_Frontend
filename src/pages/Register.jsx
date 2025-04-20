@@ -94,6 +94,8 @@ function Register() {
         if (validateForm()) {
             setIsLoading(true);
             try {
+                console.log('Enviando datos de registro:', formData); // verificacion
+
                 const response = await api.post('/api/auth/registrar', {
                     nombre: formData.nombre,
                     apellido: formData.apellido,
@@ -102,6 +104,8 @@ function Register() {
                     password: formData.password,
                     confirmPassword: formData.confirmPassword
                 });
+
+                console.log('Respuesta del servidor:', response.data); //verificacion
                 
                 // Guardar token y datos del usuario
                 login({
