@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://rokadan-backend.onrender.com/api';
+// Configuración base de la API
+const API_URL = import.meta.env.VITE_API_URL || 'https://rokadan-backend.onrender.com';
 
-// Crear instancia de axios
+// Crear instancia de axios con configuración base
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
@@ -12,7 +13,7 @@ const api = axios.create({
   }
 });
 
-// Interceptor para añadir el token a las solicitudes
+// Interceptor para añadir el token a las peticiones
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -23,112 +24,213 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Interceptor para manejar respuestas
+// Interceptor para manejar errores globales
 api.interceptors.response.use(
-  response => response,
-  error => {
+  (response) => response,
+  (error) => {
     if (error.response?.status === 401) {
-      // Manejar errores de autenticación (token expirado, inválido, etc.)
-      console.error('Error de autenticación:', error.response.data);
-      // Opcional: limpiar el localStorage y redirigir al login
+      // Token expirado o inválido
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login?sessionExpired=true';
+      window.location.href = '/login';
     }
-    return Promise.reject(error.response?.data || error.message);
+    return Promise.reject(error.response?.data || { message: 'Error de conexión' });
   }
 );
 
-// Función genérica para hacer requests
-async function makeRequest(method, endpoint, data = null, params = null) {
+// Funciones de autenticación
+export const loginUser = async ({ email, password }) => {
   try {
-    const response = await api({
-      method,
-      url: endpoint,
-      data,
-      params
-    });
+    const response = await api.post('/api/auth/login', { email, password });
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
     return response.data;
   } catch (error) {
-    console.error(`Error en ${method} ${endpoint}:`, error);
     throw error;
   }
-}
+};
 
-// Funciones específicas para Cabañas
-export async function getCabanas() {
-  return makeRequest('get', '/cabanas');
-}
+export const registerUser = async (userData) => {
+  try {
+    const response = await api.post('/api/auth/registrar', {
+      nombre: userData.nombre,
+      apellido: userData.apellido,
+      email: userData.email,
+      telefono: userData.telefono,
+      password: userData.password,
+      confirmPassword: userData.confirmPassword
+    });
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-export async function getCabanaById(id) {
-  return makeRequest('get', `/cabanas/${id}`);
-}
-
-export async function getCabanasDestacadas() {
-  return makeRequest('get', '/cabanas/destacadas');
-}
-
-export async function getCabanasDisponibles(params) {
-  return makeRequest('get', '/cabanas/disponibles', null, params);
-}
-
-// Funciones de autenticación
-export async function loginUser({ email, password }) {
-  return makeRequest('post', '/auth/login', { email, password });
-}
-
-export async function registerUser({ nombre, apellido, email, telefono, password, confirmPassword }) {
-  return makeRequest('post', '/api/auth/registrar', { 
-    nombre, 
-    apellido, 
-    email, 
-    telefono, 
-    password, 
-    confirmPassword 
-  });
-}
+export const logoutUser = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+};
 
 export const getCurrentUser = async () => {
   try {
     const response = await api.get('/api/auth/me');
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: 'Error al obtener usuario' };
+    throw error;
   }
 };
 
+// Funciones para cabañas
 export const getCabanas = async () => {
-  return api.get('/api/cabanas');
+  try {
+    const response = await api.get('/api/cabanas');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const getCabanaById = async (id) => {
-  return api.get(`/api/cabanas/${id}`);
+  try {
+    const response = await api.get(`/api/cabanas/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
-// Funciones de reservas
-export async function createReserva(reservaData) {
-  return makeRequest('post', '/reservas', reservaData);
-}
+export const getCabanasDestacadas = async () => {
+  try {
+    const response = await api.get('/api/cabanas/destacadas');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-export async function getReservasUsuario(userId) {
-  return makeRequest('get', `/reservas/usuario/${userId}`);
-}
+export const getCabanasDisponibles = async ({ fechaInicio, fechaFin, adultos = 1, ninos = 0 }) => {
+  try {
+    const response = await api.get('/api/cabanas/disponibles', {
+      params: { fechaInicio, fechaFin, adultos, ninos }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-export async function getMisReservas() {
-  return makeRequest('get', '/reservas/mis-reservas');
-}
+export const createCabana = async (cabanaData) => {
+  try {
+    const response = await api.post('/api/cabanas', cabanaData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-export async function updateReserva(id, reservaData) {
-  return makeRequest('patch', `/reservas/${id}`, reservaData);
-}
+export const updateCabana = async (id, cabanaData) => {
+  try {
+    const response = await api.patch(`/api/cabanas/${id}`, cabanaData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-export async function cancelReserva(id) {
-  return makeRequest('delete', `/reservas/${id}`);
-}
+export const deleteCabana = async (id) => {
+  try {
+    const response = await api.delete(`/api/cabanas/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-// Funciones de servicios
-export async function getServicios() {
-  return makeRequest('get', '/servicios');
-}
+// Funciones para servicios
+export const getServicios = async () => {
+  try {
+    const response = await api.get('/api/servicios');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
+export const getServicioById = async (id) => {
+  try {
+    const response = await api.get(`/api/servicios/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Funciones para reservas
+export const createReserva = async (reservaData) => {
+  try {
+    const response = await api.post('/api/reservas', reservaData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getReservasUsuario = async (userId) => {
+  try {
+    const response = await api.get(`/api/reservas/usuario/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getReservaById = async (id) => {
+  try {
+    const response = await api.get(`/api/reservas/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateReserva = async (id, reservaData) => {
+  try {
+    const response = await api.patch(`/api/reservas/${id}`, reservaData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const cancelReserva = async (id) => {
+  try {
+    const response = await api.delete(`/api/reservas/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Funciones para pagos
+export const createPago = async (pagoData) => {
+  try {
+    const response = await api.post('/api/pagos', pagoData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getPagoById = async (id) => {
+  try {
+    const response = await api.get(`/api/pagos/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Exportar la instancia de axios por si se necesita directamente
 export default api;
