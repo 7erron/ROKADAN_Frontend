@@ -1,91 +1,28 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../api';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 function Login() {
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  
-  const [errors, setErrors] = useState({
-    email: '',
-    password: ''
-  });
-  
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {
-      email: !formData.email ? 'El email es requerido' : 
-             !/^\S+@\S+\.\S+$/.test(formData.email) ? 'Email inválido' : '',
-      password: !formData.password ? 'La contraseña es requerida' : ''
-    };
-    
-    setErrors(newErrors);
-    return !Object.values(newErrors).some(error => error);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!validateForm()) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const response = await loginUser({
-        email: formData.email,
-        password: formData.password
-      });
-      
-      toast.success(`¡Bienvenido ${response.user.nombre}!`, {
-        autoClose: 2000,
-        onClose: () => {
-          if (response.user.es_admin) {
-            navigate('/admin/dashboard');
-          } else {
-            navigate('/');
-          }
-        }
-      });
-      
+      const response = await loginUser(formData);
+      login(response.user, response.token); // Usa la función login del contexto
+      toast.success(`Bienvenido ${response.user.nombre}`);
     } catch (error) {
-      let errorMessage = 'Error al iniciar sesión';
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            errorMessage = 'Email o contraseña incorrectos';
-            break;
-          case 400:
-            errorMessage = 'Datos de inicio inválidos';
-            break;
-          default:
-            errorMessage = 'Error del servidor. Intente más tarde';
-        }
-      }
-      toast.error(errorMessage);
-      
+      toast.error(error.message || 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }
