@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Register() {
   const navigate = useNavigate();
@@ -21,15 +23,14 @@ function Register() {
     specialChar: false
   });
 
-  const [submitError, setSubmitError] = useState('');
   const [passwordsMismatch, setPasswordsMismatch] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     const updatedForm = {...formData, [name]: value};
     setFormData(updatedForm);
 
-    // Validaciones para el campo password
     if (name === 'password') {
       setPasswordRequirements({
         length: value.length < 8,
@@ -40,7 +41,6 @@ function Register() {
       });
     }
 
-    // Validación de coincidencia cuando cambia cualquiera de los campos de contraseña
     if (name === 'password' || name === 'confirmPassword') {
       const mismatch = updatedForm.password !== updatedForm.confirmPassword;
       setPasswordsMismatch(mismatch && !!updatedForm.confirmPassword);
@@ -63,23 +63,30 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitError('');
+    setIsSubmitting(true);
 
     if (!validateForm()) {
-      setSubmitError('Por favor completa todos los campos correctamente');
+      toast.error('Por favor completa todos los campos correctamente');
+      setIsSubmitting(false);
       return;
     }
 
     try {
       await registerUser(formData);
-      navigate('/login');
+      toast.success('¡Registro exitoso! Redirigiendo...', {
+        autoClose: 2000,
+        onClose: () => navigate('/login')
+      });
     } catch (error) {
-      setSubmitError(error.message || 'Error al registrarse');
+      toast.error(error.message || 'Error al registrarse');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="container my-4">
+      <ToastContainer position="top-center" />
       <div className="row justify-content-center">
         <div className="col-md-8">
           <div className="card">
@@ -87,8 +94,6 @@ function Register() {
               <h3 className="mb-0">Registro de Usuario</h3>
             </div>
             <div className="card-body">
-              {submitError && <div className="alert alert-danger">{submitError}</div>}
-
               <form onSubmit={handleSubmit}>
                 {/* Campos de nombre, apellido, email y teléfono */}
                 <div className="row mb-3">
@@ -198,9 +203,14 @@ function Register() {
                   <button 
                     type="submit" 
                     className="btn btn-success"
-                    disabled={!validateForm()}
+                    disabled={!validateForm() || isSubmitting}
                   >
-                    Registrarse
+                    {isSubmitting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        Procesando...
+                      </>
+                    ) : 'Registrarse'}
                   </button>
                 </div>
               </form>

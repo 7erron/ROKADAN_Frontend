@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
   const navigate = useNavigate();
@@ -11,8 +13,7 @@ function Login() {
   
   const [errors, setErrors] = useState({
     email: '',
-    password: '',
-    general: ''
+    password: ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -24,12 +25,10 @@ function Login() {
       [name]: value
     }));
     
-    // Limpiar errores al escribir
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
-        [name]: '',
-        general: ''
+        [name]: ''
       }));
     }
   };
@@ -47,11 +46,12 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
     setIsLoading(true);
-    setErrors(prev => ({ ...prev, general: '' }));
+
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await loginUser({
@@ -59,16 +59,18 @@ function Login() {
         password: formData.password
       });
       
-      // Redirección basada en rol
-      if (response.user.es_admin) {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
+      toast.success(`¡Bienvenido ${response.user.nombre}!`, {
+        autoClose: 2000,
+        onClose: () => {
+          if (response.user.es_admin) {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/');
+          }
+        }
+      });
       
     } catch (error) {
-      console.error('Error en login:', error);
-      
       let errorMessage = 'Error al iniciar sesión';
       if (error.response) {
         switch (error.response.status) {
@@ -78,16 +80,11 @@ function Login() {
           case 400:
             errorMessage = 'Datos de inicio inválidos';
             break;
-          case 500:
+          default:
             errorMessage = 'Error del servidor. Intente más tarde';
-            break;
         }
       }
-      
-      setErrors(prev => ({
-        ...prev,
-        general: errorMessage
-      }));
+      toast.error(errorMessage);
       
     } finally {
       setIsLoading(false);
@@ -96,6 +93,7 @@ function Login() {
 
   return (
     <div className="container my-5">
+      <ToastContainer position="top-center" />
       <div className="row justify-content-center">
         <div className="col-md-6 col-lg-4">
           <div className="card shadow">
@@ -104,17 +102,6 @@ function Login() {
             </div>
             
             <div className="card-body p-4">
-              {errors.general && (
-                <div className="alert alert-danger alert-dismissible fade show">
-                  {errors.general}
-                  <button 
-                    type="button" 
-                    className="btn-close" 
-                    onClick={() => setErrors(prev => ({ ...prev, general: '' }))}
-                  />
-                </div>
-              )}
-              
               <form onSubmit={handleSubmit} noValidate>
                 {/* Campo Email */}
                 <div className="mb-3">
@@ -174,27 +161,13 @@ function Login() {
                   >
                     {isLoading ? (
                       <>
-                        <span 
-                          className="spinner-border spinner-border-sm" 
-                          aria-hidden="true"
-                        />
-                        <span role="status"> Iniciando sesión...</span>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        Iniciando sesión...
                       </>
-                    ) : (
-                      'Iniciar Sesión'
-                    )}
+                    ) : 'Iniciar Sesión'}
                   </button>
                 </div>
               </form>
-              
-              <div className="mt-3 text-center">
-                <p className="mb-0">
-                  ¿No tienes una cuenta?{' '}
-                  <Link to="/register" className="text-success fw-semibold">
-                    Regístrate aquí
-                  </Link>
-                </p>
-              </div>
             </div>
           </div>
         </div>
