@@ -13,60 +13,53 @@ function Register() {
     confirmPassword: ''
   });
 
-  const [passwordErrors, setPasswordErrors] = useState({
+  const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     number: false,
     lowercase: false,
     uppercase: false,
-    specialChar: false,
-    match: false
+    specialChar: false
   });
 
   const [submitError, setSubmitError] = useState('');
+  const [passwordsMismatch, setPasswordsMismatch] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const newFormData = {...formData, [name]: value};
-    setFormData(newFormData);
-    
-    // Validaciones solo para el campo password
+    const updatedForm = {...formData, [name]: value};
+    setFormData(updatedForm);
+
+    // Validaciones para el campo password
     if (name === 'password') {
-      setPasswordErrors({
-        ...passwordErrors,
+      setPasswordRequirements({
         length: value.length < 8,
         number: !/[0-9]/.test(value),
         lowercase: !/[a-z]/.test(value),
         uppercase: !/[A-Z]/.test(value),
-        specialChar: !/[\W_]/.test(value),
-        match: value !== formData.confirmPassword && formData.confirmPassword !== ''
+        specialChar: !/[\W_]/.test(value)
       });
     }
-    
-    // Validación para confirmPassword
-    if (name === 'confirmPassword') {
-        setPasswordErrors({
-          ...passwordErrors,
-          match: value !== formData.password
-        });
-      }
-    };
 
-    const validateForm = () => {
-        return (
-          formData.nombre &&
-          formData.apellido &&
-          formData.email &&
-          formData.telefono &&
-          formData.password &&
-          formData.confirmPassword &&
-          !passwordErrors.length &&
-          !passwordErrors.number &&
-          !passwordErrors.lowercase &&
-          !passwordErrors.uppercase &&
-          !passwordErrors.specialChar &&
-          passwordsMatch() // Usamos la nueva función de verificación
-        );
-      };
+    // Validación de coincidencia cuando cambia cualquiera de los campos de contraseña
+    if (name === 'password' || name === 'confirmPassword') {
+      const mismatch = updatedForm.password !== updatedForm.confirmPassword;
+      setPasswordsMismatch(mismatch && !!updatedForm.confirmPassword);
+    }
+  };
+
+  const validateForm = () => {
+    const isPasswordValid = !Object.values(passwordRequirements).some(req => req);
+    return (
+      formData.nombre &&
+      formData.apellido &&
+      formData.email &&
+      formData.telefono &&
+      formData.password &&
+      formData.confirmPassword &&
+      isPasswordValid &&
+      !passwordsMismatch
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,11 +87,10 @@ function Register() {
               <h3 className="mb-0">Registro de Usuario</h3>
             </div>
             <div className="card-body">
-              {submitError && (
-                <div className="alert alert-danger">{submitError}</div>
-              )}
+              {submitError && <div className="alert alert-danger">{submitError}</div>}
 
               <form onSubmit={handleSubmit}>
+                {/* Campos de nombre, apellido, email y teléfono */}
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <label htmlFor="nombre" className="form-label">Nombre</label>
@@ -109,7 +101,6 @@ function Register() {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      placeholder="Ingrese su nombre"
                       required
                     />
                   </div>
@@ -122,12 +113,11 @@ function Register() {
                       name="apellido"
                       value={formData.apellido}
                       onChange={handleChange}
-                      placeholder="Ingrese su apellido"
                       required
                     />
                   </div>
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="email" className="form-label">Email</label>
                   <input
@@ -137,11 +127,10 @@ function Register() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="ejemplo@correo.com"
                     required
                   />
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="telefono" className="form-label">Teléfono</label>
                   <input
@@ -151,75 +140,60 @@ function Register() {
                     name="telefono"
                     value={formData.telefono}
                     onChange={handleChange}
-                    placeholder="Ingrese su número de teléfono"
                     required
                   />
                 </div>
-                
+
+                {/* Campo de contraseña con validaciones */}
                 <div className="mb-3">
                   <label htmlFor="password" className="form-label">Contraseña</label>
                   <input
                     type="password"
-                    className={`form-control ${passwordErrors.length || passwordErrors.number || 
-                      passwordErrors.lowercase || passwordErrors.uppercase || 
-                      passwordErrors.specialChar ? 'is-invalid' : ''}`}
+                    className={`form-control ${Object.values(passwordRequirements).some(req => req) ? 'is-invalid' : ''}`}
                     id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Ingrese su contraseña"
                     required
                   />
                   <div className="invalid-feedback">
                     <ul className="list-unstyled">
-                      <li className={passwordErrors.length ? 'text-danger' : 'text-success'}>
-                        {passwordErrors.length ? '✖' : '✓'} Mínimo 8 caracteres
+                      <li className={passwordRequirements.length ? 'text-danger' : 'text-success'}>
+                        {passwordRequirements.length ? '✖' : '✓'} Mínimo 8 caracteres
                       </li>
-                      <li className={passwordErrors.number ? 'text-danger' : 'text-success'}>
-                        {passwordErrors.number ? '✖' : '✓'} Al menos un número
+                      <li className={passwordRequirements.number ? 'text-danger' : 'text-success'}>
+                        {passwordRequirements.number ? '✖' : '✓'} Al menos un número
                       </li>
-                      <li className={passwordErrors.lowercase ? 'text-danger' : 'text-success'}>
-                        {passwordErrors.lowercase ? '✖' : '✓'} Al menos una minúscula
+                      <li className={passwordRequirements.lowercase ? 'text-danger' : 'text-success'}>
+                        {passwordRequirements.lowercase ? '✖' : '✓'} Al menos una minúscula
                       </li>
-                      <li className={passwordErrors.uppercase ? 'text-danger' : 'text-success'}>
-                        {passwordErrors.uppercase ? '✖' : '✓'} Al menos una mayúscula
+                      <li className={passwordRequirements.uppercase ? 'text-danger' : 'text-success'}>
+                        {passwordRequirements.uppercase ? '✖' : '✓'} Al menos una mayúscula
                       </li>
-                      <li className={passwordErrors.specialChar ? 'text-danger' : 'text-success'}>
-                        {passwordErrors.specialChar ? '✖' : '✓'} Al menos un carácter especial
+                      <li className={passwordRequirements.specialChar ? 'text-danger' : 'text-success'}>
+                        {passwordRequirements.specialChar ? '✖' : '✓'} Al menos un carácter especial
                       </li>
                     </ul>
                   </div>
                 </div>
 
+                {/* Campo de confirmación de contraseña */}
                 <div className="mb-3">
-                    <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
-                    <input
+                  <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
+                  <input
                     type="password"
-                    className={`form-control ${formData.confirmPassword && !passwordsMatch() ? 'is-invalid' : ''}`}
+                    className={`form-control ${passwordsMismatch ? 'is-invalid' : ''}`}
                     id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    placeholder="Confirme su contraseña"
-                    required
-                    />
-                    {formData.confirmPassword && !passwordsMatch() && (
-                    <div className="invalid-feedback">Las contraseñas no coinciden</div>
-                    )}
-                </div>
-                
-                <div className="form-check mb-3">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="terminos"
                     required
                   />
-                  <label className="form-check-label" htmlFor="terminos">
-                    Acepto los términos y condiciones
-                  </label>
+                  {passwordsMismatch && (
+                    <div className="invalid-feedback">Las contraseñas no coinciden</div>
+                  )}
                 </div>
-                
+
                 <div className="d-grid gap-2">
                   <button 
                     type="submit" 
