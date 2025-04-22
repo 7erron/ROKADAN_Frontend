@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../api';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function Register() {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -27,7 +29,7 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const updatedForm = {...formData, [name]: value};
+    const updatedForm = { ...formData, [name]: value };
     setFormData(updatedForm);
 
     if (name === 'password') {
@@ -85,7 +87,6 @@ function Register() {
 
   return (
     <div className="container my-4">
-      <ToastContainer position="top-center" />
       <div className="row justify-content-center">
         <div className="col-md-8">
           <div className="card">
@@ -94,7 +95,7 @@ function Register() {
             </div>
             <div className="card-body">
               <form onSubmit={handleSubmit}>
-                {/* Campos de nombre, apellido, email y teléfono */}
+                {/* Nombre y Apellido */}
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <label htmlFor="nombre" className="form-label">Nombre</label>
@@ -122,6 +123,7 @@ function Register() {
                   </div>
                 </div>
 
+                {/* Email y Teléfono */}
                 <div className="mb-3">
                   <label htmlFor="email" className="form-label">Email</label>
                   <input
@@ -148,7 +150,7 @@ function Register() {
                   />
                 </div>
 
-                {/* Campo de contraseña con validaciones */}
+                {/* Contraseña */}
                 <div className="mb-3">
                   <label htmlFor="password" className="form-label">Contraseña</label>
                   <input
@@ -161,7 +163,7 @@ function Register() {
                     required
                   />
                   <div className="invalid-feedback">
-                    <ul className="list-unstyled">
+                    <ul className="list-unstyled mb-0">
                       <li className={passwordRequirements.length ? 'text-danger' : 'text-success'}>
                         {passwordRequirements.length ? '✖' : '✓'} Mínimo 8 caracteres
                       </li>
@@ -181,7 +183,7 @@ function Register() {
                   </div>
                 </div>
 
-                {/* Campo de confirmación de contraseña */}
+                {/* Confirmar contraseña */}
                 <div className="mb-3">
                   <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
                   <input
@@ -198,9 +200,10 @@ function Register() {
                   )}
                 </div>
 
+                {/* Botón */}
                 <div className="d-grid gap-2">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-success"
                     disabled={!validateForm() || isSubmitting}
                   >
