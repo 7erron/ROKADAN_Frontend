@@ -21,6 +21,7 @@ import AdminReservaDetalle from "./pages/admin/AdminReservaDetalle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
+
 function App() {
   return (
     <AuthProvider>
