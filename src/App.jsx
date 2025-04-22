@@ -5,7 +5,7 @@ import Footer from "./components/Footer";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import QuienesSomos from "./pages/QuienesSomos";
-import Cabañas from "./pages/Cabañas";
+import Cabañas from "./pages/Cabanas";
 import Servicios from "./pages/Servicios";
 import Reservas from "./pages/Reservas";
 import MisReservas from "./pages/MisReservas";
