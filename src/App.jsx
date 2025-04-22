@@ -20,6 +20,8 @@ import AdminServicioForm from "./pages/admin/AdminServicioForm";
 import AdminReservaDetalle from "./pages/admin/AdminReservaDetalle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 function App() {
@@ -50,6 +52,7 @@ function App() {
         <Route path="/admin/reservas/:id" element={<ProtectedRoute adminOnly={true}><AdminReservaDetalle /></ProtectedRoute>} />
       </Routes>
       <Footer />
+      <ToastContainer />
     </AuthProvider>
   );
 }
