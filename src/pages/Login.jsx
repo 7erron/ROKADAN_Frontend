@@ -1,26 +1,65 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../api';
 import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+
+  const [errors, setErrors] = useState({
+    email: '',
+    password: ''
+  });
+
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Limpiar error al escribir
+    setErrors((prev) => ({
+      ...prev,
+      [name]: ''
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      email: !formData.email ? 'El email es obligatorio' : '',
+      password: !formData.password ? 'La contraseña es obligatoria' : ''
+    };
+
+    setErrors(newErrors);
+    return !newErrors.email && !newErrors.password;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!validateForm()) {
+      toast.error('Por favor completa todos los campos');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await loginUser(formData);
-      login(response.user, response.token); // Usa la función login del contexto
+      login(response.user, response.token);
       toast.success(`Bienvenido ${response.user.nombre}`);
+      navigate('/');
     } catch (error) {
       toast.error(error.message || 'Error al iniciar sesión');
     } finally {
@@ -36,14 +75,11 @@ function Login() {
             <div className="card-header bg-success text-white text-center">
               <h3 className="mb-0">Iniciar Sesión</h3>
             </div>
-            
             <div className="card-body p-4">
               <form onSubmit={handleSubmit} noValidate>
-                {/* Campo Email */}
+                {/* Email */}
                 <div className="mb-3">
-                  <label htmlFor="email" className="form-label">
-                    Email
-                  </label>
+                  <label htmlFor="email" className="form-label">Email</label>
                   <input
                     type="email"
                     className={`form-control ${errors.email ? 'is-invalid' : ''}`}
@@ -58,12 +94,10 @@ function Login() {
                     <div className="invalid-feedback">{errors.email}</div>
                   )}
                 </div>
-                
-                {/* Campo Contraseña */}
+
+                {/* Contraseña */}
                 <div className="mb-3">
-                  <label htmlFor="password" className="form-label">
-                    Contraseña
-                  </label>
+                  <label htmlFor="password" className="form-label">Contraseña</label>
                   <input
                     type="password"
                     className={`form-control ${errors.password ? 'is-invalid' : ''}`}
@@ -77,23 +111,19 @@ function Login() {
                   {errors.password && (
                     <div className="invalid-feedback">{errors.password}</div>
                   )}
-                  
                   <div className="text-end mt-2">
-                    <Link 
-                      to="/forgot-password" 
-                      className="text-decoration-none small"
-                    >
+                    <Link to="/forgot-password" className="text-decoration-none small">
                       ¿Olvidaste tu contraseña?
                     </Link>
                   </div>
                 </div>
-                
-                {/* Botón de Submit */}
+
+                {/* Botón */}
                 <div className="d-grid gap-2">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-success"
-                    disabled={isLoading || !formData.email || !formData.password}
+                    disabled={isLoading}
                   >
                     {isLoading ? (
                       <>
