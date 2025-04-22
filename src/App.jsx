@@ -20,6 +20,7 @@ import AdminServicioForm from "./pages/admin/AdminServicioForm";
 import AdminReservaDetalle from "./pages/admin/AdminReservaDetalle";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
+import axios from 'axios';
 
 
 axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'https://rokadan-backend.onrender.com';
