@@ -27,6 +27,7 @@ import { AuthProvider } from "./context/AuthContext";
 function App() {
   return (
     <AuthProvider>
+      <ToastContainer />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -52,7 +53,6 @@ function App() {
         <Route path="/admin/reservas/:id" element={<ProtectedRoute adminOnly={true}><AdminReservaDetalle /></ProtectedRoute>} />
       </Routes>
       <Footer />
-      <ToastContainer />
     </AuthProvider>
   );
 }
