@@ -9,7 +9,7 @@ import Cabanas from "./pages/Cabanas";
 import Servicios from "./pages/Servicios";
 import Reservas from "./pages/Reservas";
 import MisReservas from "./pages/MisReservas";
-import DetalleCabaña from "./pages/DetalleCabaña";
+import DetalleCabaña from "./pages/DetalleCabana";
 import Pago from "./pages/Pago";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCabanas from "./pages/admin/AdminCabanas";
