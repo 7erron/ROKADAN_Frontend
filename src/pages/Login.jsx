@@ -2,7 +2,6 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../api';
 import { AuthContext } from '../context/AuthContext';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
@@ -31,7 +30,6 @@ function Login() {
 
   return (
     <div className="container my-5">
-      <ToastContainer position="top-center" />
       <div className="row justify-content-center">
         <div className="col-md-6 col-lg-4">
           <div className="card shadow">
