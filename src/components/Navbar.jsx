@@ -1,15 +1,14 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 function Navbar() {
-    const { isAuthenticated, user, isAdmin, logout } = useContext(AuthContext);
+    const { isAuthenticated, logout } = useContext(AuthContext);
+    const navigate = useNavigate(); // Hook para redirigir
 
     const handleLogout = () => {
         logout();
-        toast.info('Has cerrado sesión correctamente');
+        navigate('/'); // Redirigir al home
     };
 
     return (
@@ -43,7 +42,7 @@ function Navbar() {
                                     </Link>
                                 </li>
                                 <li className="nav-item">
-                                    <Link className="nav-link text-light" to="/cabañas">
+                                    <Link className="nav-link text-light" to="/cabanas">
                                         <button className="btn btn-outline-light">
                                             <i className="bi bi-unlock"></i>
                                             &nbsp; CABAÑAS
@@ -66,16 +65,6 @@ function Navbar() {
                                         </button>
                                     </Link>
                                 </li>
-                                {isAdmin && (
-                                    <li className="nav-item">
-                                        <Link className="nav-link text-light" to="/admin">
-                                            <button className="btn btn-outline-warning">
-                                                <i className="bi bi-shield-lock"></i>
-                                                &nbsp; ADMIN
-                                            </button>
-                                        </Link>
-                                    </li>
-                                )}
                                 <li className="nav-item">
                                     <button className="btn btn-outline-danger nav-link" onClick={handleLogout}>
                                         <i className="bi bi-box-arrow-right"></i>
