@@ -3,14 +3,14 @@ import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
-function ServicioCard({ titulo, descripcion, icono, onAddToCart }) {
+function ServicioCard({ servicio, onAddToCart }) {
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAdd = () => {
     setIsAdding(true);
-    onAddToCart();
+    onAddToCart(servicio); // Pasar el servicio completo al carrito
 
-    toast.success(`${titulo} agregado al carrito`, {
+    toast.success(`${servicio.titulo} agregado al carrito`, {
       position: "top-right",
       autoClose: 2000
     });
@@ -21,7 +21,7 @@ function ServicioCard({ titulo, descripcion, icono, onAddToCart }) {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="card h-100 shadow-sm"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
@@ -29,9 +29,9 @@ function ServicioCard({ titulo, descripcion, icono, onAddToCart }) {
     >
       <div className="card-body text-center d-flex flex-column justify-content-between">
         <div>
-          <i className={`bi ${icono || 'bi-star'} fs-1 mb-3 text-success`}></i>
-          <h5 className="card-title">{titulo || 'Servicio'}</h5>
-          <p className="card-text">{descripcion || 'Descripción no disponible.'}</p>
+          <i className={`bi ${servicio.icono || 'bi-star'} fs-1 mb-3 text-success`}></i>
+          <h5 className="card-title">{servicio.titulo || 'Servicio'}</h5>
+          <p className="card-text">{servicio.descripcion || 'Descripción no disponible.'}</p>
         </div>
         <motion.button
           className="btn btn-outline-success mt-3"
@@ -55,9 +55,11 @@ function ServicioCard({ titulo, descripcion, icono, onAddToCart }) {
 }
 
 ServicioCard.propTypes = {
-  titulo: PropTypes.string,
-  descripcion: PropTypes.string,
-  icono: PropTypes.string,
+  servicio: PropTypes.shape({
+    titulo: PropTypes.string.isRequired,
+    descripcion: PropTypes.string.isRequired,
+    icono: PropTypes.string,
+  }).isRequired,
   onAddToCart: PropTypes.func.isRequired
 };
 

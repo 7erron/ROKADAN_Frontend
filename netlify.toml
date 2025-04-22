@@ -32,7 +32,8 @@
         https://img.freepik.com 
         https://a0.muscache.com
         https://cf.bstatic.com
-        https://*.bstatic.com;
+        https://*.bstatic.com
+        https://images.adsttc.com;
       font-src 'self';
       connect-src 'self' https://rokadan-backend.onrender.com;
       frame-src 'none';

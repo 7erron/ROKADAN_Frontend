@@ -22,17 +22,12 @@ function Servicios() {
         const response = await api.get('/servicios');
         console.log("Respuesta de servicios:", response.data);
 
-        const data = response.data?.servicios;
-        if (Array.isArray(data)) {
-          setServicios(data);
-        } else if (Array.isArray(response.data)) {
-          setServicios(response.data);
-        } else {
-          setServicios([]);
-        }
+        const data = response.data?.servicios || [];
+        setServicios(data);
 
       } catch (err) {
         console.error("Error al cargar servicios:", err);
+        alert("Hubo un error al cargar los servicios.");
         setServicios([]);
       } finally {
         setLoading(false);
@@ -93,7 +88,7 @@ function Servicios() {
 
     try {
       const response = await api.get(`/reservas/usuario/${user.id}`);
-      const reservas = response.data?.reservas || response.data || [];
+      const reservas = response.data?.reservas || [];
 
       if (!Array.isArray(reservas) || reservas.length === 0) {
         alert("No tienes ninguna reserva activa. Primero debes crear una reserva.");
@@ -143,7 +138,7 @@ function Servicios() {
         </div>
 
         <div className="row">
-          {Array.isArray(servicios) && servicios.map(servicio => (
+          {servicios.map(servicio => (
             <div className="col-md-4 mb-4" key={servicio.id}>
               <ServicioCard
                 {...servicio}
