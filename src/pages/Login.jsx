@@ -57,9 +57,16 @@ function Login() {
 
     try {
       const response = await loginUser(formData);
-      login(response.user, response.token);
-      toast.success(`Bienvenido ${response.user.nombre}`);
-      navigate('/');
+      login(response.user, response.token);  // Almacenar el usuario y token en el contexto
+
+      // Redirigir según el rol del usuario
+      if (response.user.es_admin) {
+        toast.success(`Bienvenido Administrador ${response.user.nombre}`);
+        navigate('/admin'); // Redirige a la página de administración si es administrador
+      } else {
+        toast.success(`Bienvenido ${response.user.nombre}`);
+        navigate('/');  // Redirige a la página principal si no es administrador
+      }
     } catch (error) {
       toast.error(error.message || 'Error al iniciar sesión');
     } finally {
