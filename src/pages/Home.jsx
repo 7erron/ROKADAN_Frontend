@@ -11,7 +11,7 @@ function Home() {
     const [loading, setLoading] = useState(true);
     const [availableRooms, setAvailableRooms] = useState([]);
     const [searchPerformed, setSearchPerformed] = useState(false);
-    const [error, setError] = useState(null);
+    const [searchError, setSearchError] = useState(null);
 
     // Datos mock para cuando el backend no responda (eliminar cuando el backend funcione)
     const mockDestacados = [
@@ -37,11 +37,11 @@ function Home() {
         const fetchData = async () => {
             try {
                 const response = await axios.get('https://rokadan-backend.onrender.com/api/cabanas/destacadas');
-                const data = response.data.data || response.data || [];
+                const data = response.data.data || [];
                 setDestacados(Array.isArray(data) ? data : []);
                 setLoading(false);
             } catch (err) {
-                console.error("Error fetching featured cabins:", error);
+                console.error("Error fetching featured cabins:", err);
                 setDestacados([]); // Asegurar que siempre sea un array
                 setLoading(false);
             }
@@ -57,7 +57,7 @@ function Home() {
         setSearchError(null);
 
         try {
-            const response = await axios.get('/api/cabanas/disponibles', {
+            const response = await axios.get('https://rokadan-backend.onrender.com/api/cabanas/disponibles', {
                 params: {
                     fechaInicio: checkin,
                     fechaFin: checkout,
@@ -65,8 +65,8 @@ function Home() {
                     ninos: children
                 }
             });
-            
-            const data = response.data.data || response.data || [];
+
+            const data = response.data.data || [];
             setAvailableRooms(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error searching rooms:", error);
@@ -88,7 +88,7 @@ function Home() {
                                 "Cabañas Disponibles" : 
                                 "No se encontraron cabañas disponibles"}
                         </h2>
-                        
+
                         {searchError && (
                             <div className="alert alert-danger text-center">
                                 {searchError}
@@ -117,7 +117,7 @@ function Home() {
                                 ))}
                             </div>
                         )}
-                        
+
                         <div className="text-center mt-4">
                             <button 
                                 className="btn btn-secondary"
@@ -170,8 +170,6 @@ function Home() {
                             </div>
                         </div>
 
-                        {error && !loading && <ErrorMessage message={error} />}
-
                         {loading ? (
                             <LoadingSpinner message="Cargando cabañas destacadas..." />
                         ) : (
@@ -198,6 +196,7 @@ function Home() {
                                         </div>
                                     </div>
                                 ))}
+
                             </div>
                         )}
 
