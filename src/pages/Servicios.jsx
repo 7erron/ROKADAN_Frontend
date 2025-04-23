@@ -20,7 +20,9 @@ function Servicios() {
     const fetchServicios = async () => {
       try {
         const response = await api.get('/servicios');
-        const data = response.data?.servicios || response.data || [];
+        
+        // Verificar si los datos están en el formato esperado y si la propiedad servicios es un array
+        const data = Array.isArray(response.data?.servicios) ? response.data.servicios : [];
         setServicios(data);
       } catch (err) {
         console.error("Error al cargar servicios:", err);
@@ -50,11 +52,11 @@ function Servicios() {
 
     const existingItem = cart.find(item => item.id === servicio.id);
     if (existingItem) {
-      alert(`${servicio.titulo} ya está en el carrito.`);
+      alert(`${servicio.nombre} ya está en el carrito.`); // Corrigiendo el uso de "titulo" por "nombre"
     } else {
       const updatedCart = [...cart, { ...servicio, dias: 1 }];
       setCart(updatedCart);
-      alert(`${servicio.titulo} ha sido agregado al carrito.`);
+      alert(`${servicio.nombre} ha sido agregado al carrito.`);
     }
   };
 
@@ -135,14 +137,20 @@ function Servicios() {
         </div>
 
         <div className="row">
-          {servicios.map(servicio => (
-            <div className="col-md-4 mb-4" key={servicio.id}>
-              <ServicioCard
-                {...servicio}
-                onAddToCart={() => addToCart(servicio)}
-              />
+          {servicios.length > 0 ? (
+            servicios.map(servicio => (
+              <div className="col-md-4 mb-4" key={servicio.id}>
+                <ServicioCard
+                  {...servicio}
+                  onAddToCart={() => addToCart(servicio)}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="col-12">
+              <p>No hay servicios disponibles en este momento.</p>
             </div>
-          ))}
+          )}
         </div>
 
         <div className="row mt-4">
@@ -155,7 +163,7 @@ function Servicios() {
                 <ul className="list-group">
                   {cart.map(item => (
                     <li className="list-group-item d-flex justify-content-between align-items-center" key={item.id}>
-                      <span>{item.titulo} ({item.dias} días) - ${item.precio * item.dias}</span>
+                      <span>{item.nombre} ({item.dias} días) - ${item.precio * item.dias}</span>
                       <div>
                         <button className="btn btn-danger btn-sm" onClick={() => removeFromCart(item.id)}>
                           Eliminar
