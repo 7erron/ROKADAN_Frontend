@@ -5,8 +5,8 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
 const api = axios.create({
-  baseURL: 'https://rokadan-backend.onrender.com/api',
-  timeout: 10000,
+    baseURL: 'https://rokadan-backend.onrender.com/api',
+    timeout: 10000,
 });
 
 function DetalleCabana() {
@@ -18,21 +18,16 @@ function DetalleCabana() {
     useEffect(() => {
         const fetchCabana = async () => {
             try {
-                const response = await axios.get(`https://rokadan-backend.onrender.com/api/cabanas/${id}`);
+                const response = await api.get(`/cabanas/${id}`);
                 console.log('Respuesta detalle cabaña:', response.data); // Para diagnóstico
-                
-                // Manejo mejorado de la respuesta
+
+                // Manejo adecuado de la respuesta según la estructura
                 let cabanaData = {};
                 
-                if (response.data && response.data.id) {
-                    cabanaData = response.data;
-                } else if (response.data && response.data.data && response.data.data.id) {
-                    cabanaData = response.data.data;
-                } else if (response.data && response.data.cabana && response.data.cabana.id) {
-                    cabanaData = response.data.cabana;
-                }
-                
-                if (!cabanaData.id) {
+                // Verificar si la respuesta tiene los datos correctos
+                if (response.data && response.data.cabanas && response.data.cabanas.length > 0) {
+                    cabanaData = response.data.cabanas[0]; // Asumimos que hay solo una cabaña por id
+                } else {
                     throw new Error("Datos de cabaña no válidos");
                 }
                 
@@ -45,7 +40,6 @@ function DetalleCabana() {
                     imagen: cabanaData.imagen || 'https://via.placeholder.com/800x600?text=Imagen+no+disponible',
                     destacada: cabanaData.destacada || false
                 });
-                
             } catch (err) {
                 console.error("Error fetching cabin details:", err);
                 setError("Error al cargar los detalles de la cabaña");
@@ -73,13 +67,13 @@ function DetalleCabana() {
         <div className="container my-5">
             <div className="row">
                 <div className="col-md-6">
-                    <img 
-                        src={cabana.imagen} 
-                        alt={cabana.nombre} 
+                    <img
+                        src={cabana.imagen}
+                        alt={cabana.nombre}
                         className="img-fluid rounded shadow"
-                        style={{height: "400px", width: "100%", objectFit: "cover"}}
+                        style={{ height: "400px", width: "100%", objectFit: "cover" }}
                         onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/800x600?text=Imagen+no+disponible'
+                            e.target.src = 'https://via.placeholder.com/800x600?text=Imagen+no+disponible';
                         }}
                     />
                 </div>
@@ -100,8 +94,12 @@ function DetalleCabana() {
                         )}
                     </ul>
                     <div className="d-flex gap-3">
-                        <Link to={`/reservas/${cabana.id}`} className="btn btn-success">Reservar</Link>
-                        <Link to="/cabanas" className="btn btn-outline-secondary">Volver a Cabañas</Link>
+                        <Link to={`/reservas/${cabana.id}`} className="btn btn-success">
+                            Reservar
+                        </Link>
+                        <Link to="/cabanas" className="btn btn-outline-secondary">
+                            Volver a Cabañas
+                        </Link>
                     </div>
                 </div>
             </div>
