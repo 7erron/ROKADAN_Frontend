@@ -24,11 +24,13 @@ function Reservas() {
         const fetchData = async () => {
             try {
                 const [cabanaRes, serviciosRes] = await Promise.all([
-                    api.get('/cabanas'), // Asegúrate que esta ruta esté definida en el backend
-                    api.get('/servicios') // Asegúrate que esta ruta esté definida en el backend
+                    api.get('/cabanas'),
+                    api.get('/servicios')
                 ]);
+
                 setCabanas(cabanaRes.data);
-                setServiciosExtras(serviciosRes.data);
+                const servicios = serviciosRes.data?.servicios || serviciosRes.data || [];
+                setServiciosExtras(servicios);
             } catch (error) {
                 console.error("Error cargando datos:", error);
                 setError("Error al cargar cabañas o servicios");
@@ -46,7 +48,7 @@ function Reservas() {
         const isChecked = e.target.checked;
         setReservationData(prev => {
             const extras = isChecked
-                ? [...prev.extras, extra]
+                ? [...prev.extras, { id: extra.id, dias: 1 }]
                 : prev.extras.filter(item => item.id !== extra.id);
             return { ...prev, extras };
         });
@@ -70,15 +72,13 @@ function Reservas() {
         setError(null);
 
         try {
-            const serviciosSeleccionados = reservationData.extras.map(extra => extra.id);
-
             const response = await api.post('/reservas', {
                 cabana_id: reservationData.cabana,
                 fecha_inicio: reservationData.checkin,
                 fecha_fin: reservationData.checkout,
                 adultos: reservationData.adults,
                 ninos: reservationData.children,
-                servicios: serviciosSeleccionados
+                servicios: reservationData.extras
             });
 
             alert(`Reserva realizada con éxito para ${user.nombre}.`);
@@ -168,7 +168,7 @@ function Reservas() {
                                 onChange={(e) => handleExtraChange(e, extra)}
                             />
                             <label className="form-check-label" htmlFor={`extra-${extra.id}`}>
-                                {extra.nombre} (${extra.precio})
+                                {extra.nombre || extra.titulo} (${extra.precio})
                             </label>
                         </div>
                     ))}

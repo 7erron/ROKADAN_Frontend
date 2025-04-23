@@ -21,10 +21,8 @@ function Servicios() {
       try {
         const response = await api.get('/servicios');
         console.log("Respuesta de servicios:", response.data);
-
-        const data = response.data?.servicios || [];
+        const data = response.data?.servicios || response.data || [];
         setServicios(data);
-
       } catch (err) {
         console.error("Error al cargar servicios:", err);
         alert("Hubo un error al cargar los servicios.");
@@ -99,7 +97,7 @@ function Servicios() {
       const lastReserva = reservas[reservas.length - 1];
 
       await api.put(`/reservas/${lastReserva.id}`, {
-        extras: cart
+        extras: cart.map(item => ({ id: item.id, dias: item.dias }))
       });
 
       setCart([]);
