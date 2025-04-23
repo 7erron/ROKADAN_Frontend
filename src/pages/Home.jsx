@@ -37,7 +37,7 @@ function Home() {
         const fetchData = async () => {
             try {
                 const response = await axios.get('https://rokadan-backend.onrender.com/api/cabanas/destacadas');
-                const data = response.data.data || [];
+                const data = response.data.data?.cabanas || [];
                 setDestacados(Array.isArray(data) ? data : []);
                 setLoading(false);
             } catch (err) {
