@@ -24,8 +24,8 @@ function Reservas() {
         const fetchData = async () => {
             try {
                 const [cabanaRes, serviciosRes] = await Promise.all([
-                    api.get('/cabanas'),
-                    api.get('/servicios')
+                    api.get('/cabanas'), // Asegúrate que esta ruta esté definida en el backend
+                    api.get('/servicios') // Asegúrate que esta ruta esté definida en el backend
                 ]);
                 setCabanas(cabanaRes.data);
                 setServiciosExtras(serviciosRes.data);
