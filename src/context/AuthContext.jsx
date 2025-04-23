@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
               const userData = await getCurrentUser();
-              login(userData.user);
+              login(userData.user, storedToken);
             }
           } catch (error) {
             logout();
