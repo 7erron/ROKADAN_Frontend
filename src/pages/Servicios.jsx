@@ -20,7 +20,6 @@ function Servicios() {
     const fetchServicios = async () => {
       try {
         const response = await api.get('/servicios');
-        console.log("Respuesta de servicios:", response.data);
         const data = response.data?.servicios || response.data || [];
         setServicios(data);
       } catch (err) {
@@ -146,60 +145,40 @@ function Servicios() {
           ))}
         </div>
 
-        <div className="row mt-5">
+        <div className="row mt-4">
           <div className="col-md-12">
-            <div className="card">
-              <div className="card-header bg-success text-white">
-                <h2 className="mb-0">Carrito de Servicios</h2>
+            <h3>Carrito de Servicios</h3>
+            {cart.length === 0 ? (
+              <p>No tienes servicios en el carrito.</p>
+            ) : (
+              <div>
+                <ul className="list-group">
+                  {cart.map(item => (
+                    <li className="list-group-item d-flex justify-content-between align-items-center" key={item.id}>
+                      <span>{item.titulo} ({item.dias} días) - ${item.precio * item.dias}</span>
+                      <div>
+                        <button className="btn btn-danger btn-sm" onClick={() => removeFromCart(item.id)}>
+                          Eliminar
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.dias}
+                          onChange={(e) => updateDays(item.id, parseInt(e.target.value))}
+                          className="form-control d-inline w-auto mx-2"
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3">
+                  <strong>Total: ${calculateTotal()}</strong>
+                </div>
+                <button className="btn btn-success mt-3" onClick={addServicesToReservation}>
+                  Agregar a Reserva
+                </button>
               </div>
-              <div className="card-body">
-                {cart.length === 0 ? (
-                  <p>No hay servicios en el carrito.</p>
-                ) : (
-                  <>
-                    <ul className="list-group mb-4">
-                      {cart.map((item, index) => (
-                        <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                          <div>
-                            <i className={`bi ${item.icono} me-2`}></i>
-                            {item.titulo} - {item.dias} día(s) - ${item.precio * item.dias}
-                          </div>
-                          <div>
-                            <button
-                              className="btn btn-sm btn-outline-secondary me-2"
-                              onClick={() => updateDays(item.id, item.dias - 1)}
-                            >
-                              -
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-secondary me-2"
-                              onClick={() => updateDays(item.id, item.dias + 1)}
-                            >
-                              +
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => removeFromCart(item.id)}
-                            >
-                              <i className="bi bi-trash"></i>
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h5>Total: ${calculateTotal()}</h5>
-                      <button
-                        className="btn btn-success"
-                        onClick={addServicesToReservation}
-                      >
-                        Agregar a mi reserva
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

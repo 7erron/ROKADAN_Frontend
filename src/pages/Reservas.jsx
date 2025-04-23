@@ -37,6 +37,12 @@ function Reservas() {
             }
         };
         fetchData();
+
+        const storedExtras = JSON.parse(localStorage.getItem('serviciosCart')) || [];
+        setReservationData(prev => ({
+            ...prev,
+            extras: storedExtras.map(({ id, dias }) => ({ id, dias }))
+        }));
     }, []);
 
     const handleChange = (e) => {
@@ -52,6 +58,13 @@ function Reservas() {
                 : prev.extras.filter(item => item.id !== extra.id);
             return { ...prev, extras };
         });
+    };
+
+    const handleExtraDaysChange = (id, dias) => {
+        setReservationData(prev => ({
+            ...prev,
+            extras: prev.extras.map(item => item.id === id ? { ...item, dias } : item)
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -82,6 +95,7 @@ function Reservas() {
             });
 
             alert(`Reserva realizada con éxito para ${user.nombre}.`);
+            localStorage.removeItem('serviciosCart'); // Limpiar carrito después de reserva
             navigate('/misreservas');
         } catch (err) {
             console.error("Error al crear reserva:", err);
@@ -170,6 +184,15 @@ function Reservas() {
                             <label className="form-check-label" htmlFor={`extra-${extra.id}`}>
                                 {extra.nombre || extra.titulo} (${extra.precio})
                             </label>
+                            {reservationData.extras.some(item => item.id === extra.id) && (
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={reservationData.extras.find(item => item.id === extra.id)?.dias || 1}
+                                    onChange={(e) => handleExtraDaysChange(extra.id, parseInt(e.target.value))}
+                                    className="form-control mt-2"
+                                />
+                            )}
                         </div>
                     ))}
                 </div>
